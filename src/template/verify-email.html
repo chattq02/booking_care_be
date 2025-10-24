@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Xác Thực Email</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f9;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+      }
+      .container {
+        max-width: 600px;
+        padding: 20px;
+        text-align: center;
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #333;
+      }
+      p {
+        color: #666;
+        line-height: 1.5;
+      }
+      .button {
+        background-color: #4caf50;
+        color: white;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: bold;
+        transition: background-color 0.3s;
+      }
+      .button:hover {
+        background-color: #45a049;
+      }
+      .NumberOTP {
+        font-weight: bold;
+        border-radius: 5px;
+        background-color: #4caf50;
+        color: white;
+        padding: 8px 18px;
+        font-size: 20px;
+        transition: background-color 0.3s;
+        letter-spacing: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Xác Thực Email Của Bạn</h1>
+      <p>Nếu bạn đã yêu cầu xác thực, hãy sử dụng mã bên dưới.</p>
+      <span class="NumberOTP">{{OTP}}</span>
+      <p>Nếu bạn không yêu cầu xác thực email này, bạn có thể yên tâm bỏ qua email này.</p>
+    </div>
+  </body>
+</html>
