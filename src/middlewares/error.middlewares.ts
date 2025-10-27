@@ -3,7 +3,7 @@ import { omit } from 'lodash'
 import { httpStatus } from '../constants/httpStatus'
 import { ErrorWithStatus } from '../utils/Errors'
 
-export const defaultErrorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+export const errorMiddleware = (err: any, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof ErrorWithStatus) {
     return res.status(err.status).json({
       isSuccess: false,

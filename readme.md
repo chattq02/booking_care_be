@@ -8,4 +8,4 @@
   4: model: nơi lưu trữ dữ liệu
   5: middlewares: xử lý các dữ liệu đầu vào
 
-  //npx sequelize-cli db:migrate sử dụng câu lệnh này để thêm bảng vào db
+npx ts-node src/migrations/migrate-runner.ts    // tự động migrations

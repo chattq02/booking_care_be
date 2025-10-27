@@ -1,72 +1,51 @@
+import 'reflect-metadata'
 import express from 'express'
-import { defaultErrorHandler } from './middlewares/error.middlewares'
-import { createServer } from 'http'
-import { Server } from 'socket.io'
-import { checkConnectionDB } from './middlewares/databaseConnect.middlewares'
-import { initFolder } from './utils/file'
-import cors from 'cors'
-import { roomHandler } from './socket.io/roomHandler'
+import http from 'http'
+import { config } from 'dotenv'
 
-import router from './use_router'
-import { connectDbSequelize } from './config/connection-database'
+import { registerMiddlewares } from './initialize/run'
+import { createLogger } from './config/logger.config'
+import { connectDb, prisma } from './config/database.config'
 
-require('dotenv').config()
+config() // Load biến môi trường
 
-const app = express()
-const httpServer = createServer(app)
+const PORT = process.env.PORT || 3000
+const logger = createLogger('Main')
 
-const port = process.env.PORT
-// initFolder()
+async function bootstrap() {
+  const app = express()
 
-app.use(express.urlencoded({ extended: true }))
-
-// tạo folder upload
-
-app.use(express.json())
-
-const corsOptions = {
-  origin: process.env.CLIENT_DOMAIN
-}
-
-app.use(cors(corsOptions))
-
-const startServer = async () => {
   try {
-    await connectDbSequelize.authenticate()
-    // console.log(`Kết nối database thành công`)
-    await connectDbSequelize.sync({ alter: true, force: false })
-    //alter: true điều này làm giảm hiệu xuất do phải thay đổi các cấu trúc của bảng, nếu chạy thật thì alter: false
-    //alter: true: Cập nhật cấu trúc bảng để phù hợp với mô hình mà không phá hủy dữ liệu hiện tại.
-    //Điều này an toàn hơn so với force.
+    // 1️⃣ Kết nối Database
+    await connectDb()
 
-    app.use('/', router)
+    // 2️⃣ Load Middleware & Routes
+    registerMiddlewares(app)
 
-    app.use(checkConnectionDB)
+    // 3️⃣ Tạo HTTP server
+    const server = http.createServer(app)
 
-    app.use(defaultErrorHandler)
-
-    const io = new Server(httpServer, {
-      cors: {
-        origin: process.env.CLIENT_DOMAIN
-      }
+    // 4️⃣ Lắng nghe port
+    server.listen(PORT, () => {
+      logger.info(`🚀 Server is running on port ${PORT}`)
     })
 
-    // kết nối socketIO
-    io.on('connection', (socket) => {
-      console.log(`user ${socket.id} connected`)
-      roomHandler(socket, io)
-      socket.on('disconnect', () => {
-        console.log(`user ${socket.id} disconnected`)
+    // 5️⃣ Graceful shutdown
+    const shutdown = async () => {
+      logger.info('🛑 Shutting down gracefully...')
+      await prisma.$disconnect()
+      server.close(() => {
+        logger.info('✅ Server closed')
+        process.exit(0)
       })
-    })
+    }
 
-    httpServer.listen(port, async () => {
-      console.log(`Example app listening on port ${port}`)
-    })
+    process.on('SIGINT', shutdown)
+    process.on('SIGTERM', shutdown)
   } catch (error) {
-    console.error('Unable to connect to the database:', error)
+    logger.error('❌ Failed to start server:', error)
+    process.exit(1)
   }
 }
 
-startServer()
-export default app
+bootstrap()
