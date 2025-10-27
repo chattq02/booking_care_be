@@ -1,5 +1,4 @@
-import { TokenPayload } from "./controllers/users.controllers"
-
+import { TokenPayload } from './controllers/users.controllers'
 
 declare module 'express' {
   interface Request {

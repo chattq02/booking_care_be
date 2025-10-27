@@ -10,20 +10,22 @@ const dotenv_1 = require("dotenv");
 const run_1 = require("./initialize/run");
 const logger_config_1 = require("./config/logger.config");
 const database_config_1 = require("./config/database.config");
+const route_initialize_1 = require("./initialize/route.initialize");
 (0, dotenv_1.config)(); // Load biến môi trường
 const PORT = process.env.PORT || 3000;
 const logger = (0, logger_config_1.createLogger)('Main');
 async function bootstrap() {
     const app = (0, express_1.default)();
     try {
-        // 1️⃣ Kết nối Database
-        await (0, database_config_1.connectDb)();
-        // 2️⃣ Load Middleware & Routes
-        (0, run_1.registerMiddlewares)(app);
-        // 3️⃣ Tạo HTTP server
+        // 1 Tạo HTTP server
         const server = http_1.default.createServer(app);
-        // 4️⃣ Lắng nghe port
-        server.listen(PORT, () => {
+        server.listen(PORT, async () => {
+            // 2 Kết nối Database
+            await (0, database_config_1.connectDb)();
+            // 3 Load Middleware & Routes
+            (0, run_1.registerMiddlewares)(app);
+            // 4 Load Routes
+            (0, route_initialize_1.routesInit)(app);
             logger.info(`🚀 Server is running on port ${PORT}`);
         });
         // 5️⃣ Graceful shutdown
