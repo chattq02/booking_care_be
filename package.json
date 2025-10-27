@@ -15,11 +15,14 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write .",
-    "db:merge": "ts-node npx ts-node ./src/scripts/merge-prisma.ts",
-    "db:generate": "ts-node src/scripts/merge-prisma.ts && npx prisma generate",
-    "db:migrate": "ts-node src/scripts/merge-prisma.ts && ts-node src/scripts/migrate-auto.ts",
+    "db:migrate-auto": "ts-node src/scripts/migrate-auto.ts",
     "db:remove": "npx prisma migrate reset",
-    "db:format": "npx prisma format"
+    "db:format": "npx prisma format",
+    "db:generate": "npx prisma generate",
+    "db:migrate": "npx prisma migrate dev"
+  },
+  "prisma": {
+    "schema": "./src/models"
   },
   "pre-commit": [
     "ts.check",
@@ -76,7 +79,8 @@
     "swagger-ui-express": "^5.0.1",
     "ts-pattern": "^5.1.1",
     "vietqr": "^1.1.9",
-    "winston": "^3.18.3"
+    "winston": "^3.18.3",
+    "yarn": "^1.22.22"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8",

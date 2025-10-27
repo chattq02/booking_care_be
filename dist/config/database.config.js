@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.prisma = void 0;
 exports.connectDb = connectDb;
-const client_1 = require("src/generated/prisma/client");
+const client_1 = require("@prisma/client");
 const logger_config_1 = require("./logger.config");
 const logger = (0, logger_config_1.createLogger)('Database');
 // Build cấu hình không qua URL

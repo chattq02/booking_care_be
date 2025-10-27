@@ -1,7 +1,6 @@
 node_modules/
-# dist/
+dist/
 .env
 .yarn/
 uploads/
-src/generated
 

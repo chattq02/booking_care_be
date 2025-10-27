@@ -13,8 +13,8 @@ export const validateDTO = (DTOClass: any) => {
 
     if (errors.length > 0) {
       const formattedErrors = errors.map((err) => ({
-        property: err.property,
-        constraints: err.constraints
+        field: err.property,
+        errors: err.constraints
       }))
 
       return res.status(400).json({

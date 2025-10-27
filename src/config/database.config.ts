@@ -1,4 +1,5 @@
-import { PrismaClient } from 'src/generated/prisma/client'
+
+import { PrismaClient } from '@prisma/client'
 import { createLogger } from './logger.config'
 
 const logger = createLogger('Database')

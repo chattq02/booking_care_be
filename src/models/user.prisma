@@ -1,0 +1,7 @@
+model User {
+    id        Int      @id @default(autoincrement())
+    email     String   @unique
+    name      String?
+    posts     Post[] // 👈 thêm dòng này
+    createdAt DateTime @default(now())
+}
