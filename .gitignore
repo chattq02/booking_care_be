@@ -3,5 +3,5 @@ dist/
 .env
 .yarn/
 uploads/
+src/generated
 
-/src/generated/prisma

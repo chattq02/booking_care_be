@@ -3,6 +3,7 @@ import path from 'path'
 
 const baseSchema = `generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {

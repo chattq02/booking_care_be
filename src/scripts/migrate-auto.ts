@@ -10,7 +10,6 @@ import { execSync } from 'child_process'
 import * as dotenv from 'dotenv'
 import fs from 'fs'
 import path from 'path'
-import { DataBaseUrl } from 'src/config/database.config'
 
 dotenv.config()
 
@@ -41,7 +40,7 @@ function detectMigrationName(): string {
 async function runMigration() {
   const argName = process.argv[2]
   const migrationName = argName || detectMigrationName()
-  const env = { ...process.env, DATABASE_URL: DataBaseUrl }
+  const env = { ...process.env, DATABASE_URL: process.env.DATABASE_URL }
 
   const command =
     NODE_ENV === 'production'
