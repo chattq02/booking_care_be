@@ -76,6 +76,7 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "ts-pattern": "^5.1.1",
+    "uuid": "^13.0.0",
     "vietqr": "^1.1.9",
     "winston": "^3.18.3",
     "yarn": "^1.22.22"

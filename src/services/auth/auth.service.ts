@@ -1,15 +1,20 @@
 import { TokenType, UserVerifyStatus } from 'src/constants/enums'
+import { RegisterDto } from 'src/dtos/auth/register.dto'
 import { AuthRepository } from 'src/repository/auth/auth.repository'
-import { RegisterReqBody } from 'src/types/auth_types/auth.type'
 import { signToken, verifyToken } from 'src/utils/jwt'
+import { v4 } from 'uuid'
+import { Response } from 'express'
+import { ResultsReturned } from 'src/utils/results-api'
+import { httpStatusCode } from 'src/constants/httpStatus'
+import { VerifyEmailDto } from 'src/dtos/auth/email.dto'
 
 export class AuthService {
   private authRepo = new AuthRepository()
 
-  private signAccessToken({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
+  private signAccessToken({ subToken, verify }: { subToken: string; verify: UserVerifyStatus }) {
     return signToken({
       payload: {
-        user_id,
+        token: subToken,
         token_type: TokenType.AccessToken,
         verify
       },
@@ -20,10 +25,10 @@ export class AuthService {
     })
   }
 
-  private signRefreshToken({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
+  private signRefreshToken({ subToken, verify }: { subToken: string; verify: UserVerifyStatus }) {
     return signToken({
       payload: {
-        user_id,
+        subToken,
         token_type: TokenType.RefreshToken,
         verify
       },
@@ -41,21 +46,50 @@ export class AuthService {
     })
   }
 
-  private signAccessAndRefreshToken({ user_id, verify }: { user_id: string; verify: UserVerifyStatus }) {
-    return Promise.all([this.signAccessToken({ user_id, verify }), this.signRefreshToken({ user_id, verify })])
+  private signAccessAndRefreshToken({ subToken, verify }: { subToken: string; verify: UserVerifyStatus }) {
+    return Promise.all([this.signAccessToken({ subToken, verify }), this.signRefreshToken({ subToken, verify })])
   }
 
-  async registerUser(payload: RegisterReqBody) {
-    const { email, name, password, role } = payload
+  register = async (dto: RegisterDto, res: Response) => {
+    const existing = await this.authRepo.findByEmail(dto.name)
+    if (existing) {
+      return res.json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'Email đã tồn tại',
+          data: null
+        })
+      )
+    }
+    const user = await this.authRepo.create(dto)
 
-    const [Access_token, Refresh_tokens] = await this.signAccessAndRefreshToken({
-      user_id: email,
+    const [access_token, refresh_token] = await this.signAccessAndRefreshToken({
+      subToken: v4(),
       verify: UserVerifyStatus.Unverified
     })
 
-    return {
-      Access_token,
-      Refresh_tokens
+    return res.json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Đăng ký thành công',
+        data: null
+      })
+    )
+  }
+
+  verifyEmailAdmin = async (dto: VerifyEmailDto, res: Response) => {
+    const existing = await this.authRepo.findByEmail(dto.email)
+    if (existing) {
+      return res.json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'Email đã tồn tại',
+          data: existing
+        })
+      )
     }
   }
 }

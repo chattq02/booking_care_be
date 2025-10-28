@@ -2,9 +2,9 @@ import { plainToInstance } from 'class-transformer'
 import { validate } from 'class-validator'
 import { Request, Response, NextFunction } from 'express'
 
-export const validateDTO = (DTOClass: any) => {
+export const validateDto = (DtoClass: any) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const dtoInstance = plainToInstance(DTOClass, req.body)
+    const dtoInstance = plainToInstance(DtoClass, req.body)
 
     const errors = await validate(dtoInstance, {
       whitelist: true, // chỉ giữ lại field có trong DTO
@@ -14,12 +14,14 @@ export const validateDTO = (DTOClass: any) => {
     if (errors.length > 0) {
       const formattedErrors = errors.map((err) => ({
         field: err.property,
-        errors: err.constraints
+        data: err.constraints
       }))
 
       return res.status(400).json({
+        isSuccess: false,
+        status: 400,
         message: 'Dữ liệu không hợp lệ',
-        errors: formattedErrors
+        data: formattedErrors
       })
     }
 

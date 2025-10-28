@@ -1,12 +1,12 @@
-enum UserStatus {
-  ZERO @map("0")
-  ONE  @map("1")
-}
-
 enum Role {
   ADMIN  @map("admin")
   DOCTOR @map("doctor")
   USER   @map("user")
+}
+
+enum SupperAdmin {
+  YES @map("1") // trong DB sẽ là 1
+  NO  @map("0") // trong DB sẽ là 0
 }
 
 enum Gender {
@@ -15,21 +15,34 @@ enum Gender {
   OTHER  @map("other") // Khác
 }
 
+enum IsVerify {
+  YES @map("1") // trong DB sẽ là 1
+  NO  @map("0") // trong DB sẽ là 0
+}
+
+enum IsUpdateProfile {
+  YES @map("1") // trong DB sẽ là 1
+  NO  @map("0") // trong DB sẽ là 0
+}
+
 model User {
-  id                   Int       @id @default(autoincrement()) // Khóa chính, tự tăng
-  uuid                 String    @unique @default(uuid()) // Mã định danh duy nhất (UUID)
-  email                String    @unique @db.VarChar(256) // Email đăng nhập (duy nhất)
-  password             String    @db.VarChar(555) // Mật khẩu (đã hash) 
-  fullName             String    @db.VarChar(25) // Họ và tên đầy đủ 
-  phone                String?   @unique @db.VarChar(25) // Số điện thoại (có thể trống)
+  id                   Int             @id @default(autoincrement()) // Khóa chính, tự tăng
+  uuid                 String          @unique @default(uuid()) // Mã định danh duy nhất (UUID)
+  email                String          @unique @db.VarChar(256) // Email đăng nhập (duy nhất)
+  password             String          @db.VarChar(555) // Mật khẩu (đã hash) 
+  fullName             String          @db.VarChar(25) // Họ và tên đầy đủ 
+  phone                String?         @unique @db.VarChar(25) // Số điện thoại (có thể trống)
   gender               Gender? // Giới tính (Nam/Nữ/Khác)
   dateOfBirth          DateTime? // Ngày sinh
-  address              String?   @db.VarChar(555) // Địa chỉ 
-  role                 Role      @default(USER) // Vai trò trong hệ thống
-  specialty_id         Int // Chuyên khoa (nếu là bác sĩ)
+  address              String?         @db.VarChar(555) // Địa chỉ 
+  role                 Role            @default(USER) // Vai trò trong hệ thống
+  specialty_id         Int? // Chuyên khoa (nếu là bác sĩ)
   experience           Int? // Số năm kinh nghiệm (nếu là bác sĩ)
-  description          String?   @db.VarChar(555) // Mô tả thêm (nếu là bác sĩ)
-  password_reset_token String?   @db.VarChar(555) // Token dùng để reset mật khẩu
+  description          String?         @db.VarChar(555) // Mô tả thêm (nếu là bác sĩ)
+  password_reset_token String?         @db.VarChar(555) // Token dùng để reset mật khẩu
+  is_verify            IsVerify        @default(NO) // Đã xác minh email chưa
+  is_update_profile    IsUpdateProfile @default(NO) // Đã cập nhật thông tin cá nhân chưa
+  is_supper_admin      SupperAdmin     @default(NO) // Là admin cao nhất hay không
 
   // Các quan hệ (relationship)
   appointmentsAsDoctor  Appointment[] @relation("DoctorAppointments") // Danh sách lịch khám mà user là bác sĩ

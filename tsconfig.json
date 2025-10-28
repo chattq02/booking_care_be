@@ -19,8 +19,8 @@
   "ts-node": {
     "require": ["tsconfig-paths/register"]
   },
-  "files": ["src/type.d.ts", "src/vietqr.d.ts"], // Các file dùng để defined global type cho dự án
-  "include": ["src/**/*.ts","src/build-schema.ts"],
+  "files": ["src/type.d.ts", "src/vietqr.d.ts","src/swagger-ui-express.d.ts"], // Các file dùng để defined global type cho dự án
+  "include": ["src/**/*.ts","src/build-schema.ts","src/swagger-ui-express.d.ts"],
   "dependencies": {
     "@types/cors": "^2.8.12"
   },

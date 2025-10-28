@@ -1,5 +1,8 @@
 import { Router } from 'express'
 import authController from 'src/controllers/auth/auth.controller'
+import { VerifyEmailDto } from 'src/dtos/auth/email.dto'
+import { RegisterDto } from 'src/dtos/auth/register.dto'
+import { validateDto } from 'src/middlewares/validatorDTO.middleware'
 
 const auth_routes = Router()
 
@@ -25,7 +28,10 @@ const auth_routes = Router()
  *                 example: user name
  *               password:
  *                 type: string
- *                 example: 123456
+ *                 example: Password@123
+ *               role:
+ *                 type: string
+ *                 example: USER
  *     responses:
  *       200:
  *         description: Đăng ký thành công
@@ -43,6 +49,29 @@ const auth_routes = Router()
  *       400:
  *         description: Thiếu thông tin đăng ký
  */
-auth_routes.use('/register', authController.registerController)
+auth_routes.use('/register', validateDto(RegisterDto), authController.registerController)
+
+/**
+ * @openapi
+ * /v1/auth/verify-email-admin:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: verify email admin
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/x-www-form-urlencoded:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@example.com
+ *     responses:
+ *       200:
+ *         description: Email verified successfully
+ */
+auth_routes.use('/verify-email-admin', validateDto(VerifyEmailDto), authController.verifyEmailAdminController)
 
 export default auth_routes

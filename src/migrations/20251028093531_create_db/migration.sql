@@ -11,7 +11,16 @@ CREATE TYPE "UserStatus" AS ENUM ('0', '1');
 CREATE TYPE "Role" AS ENUM ('admin', 'doctor', 'user');
 
 -- CreateEnum
+CREATE TYPE "SupperAdmin" AS ENUM ('1', '0');
+
+-- CreateEnum
 CREATE TYPE "Gender" AS ENUM ('male', 'female', 'other');
+
+-- CreateEnum
+CREATE TYPE "IsVerify" AS ENUM ('1', '0');
+
+-- CreateEnum
+CREATE TYPE "IsUpdateProfile" AS ENUM ('1', '0');
 
 -- CreateTable
 CREATE TABLE "appointments" (
@@ -129,10 +138,13 @@ CREATE TABLE "users" (
     "dateOfBirth" TIMESTAMP(3),
     "address" VARCHAR(555),
     "role" "Role" NOT NULL DEFAULT 'user',
-    "specialty_id" INTEGER NOT NULL,
+    "specialty_id" INTEGER,
     "experience" INTEGER,
     "description" VARCHAR(555),
     "password_reset_token" VARCHAR(555),
+    "is_verify" "IsVerify" NOT NULL DEFAULT '0',
+    "is_update_profile" "IsUpdateProfile" NOT NULL DEFAULT '0',
+    "is_supper_admin" "SupperAdmin" NOT NULL DEFAULT '0',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
