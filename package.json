@@ -33,10 +33,10 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/express": "^5.0.4",
+    "@types/express": "^5.0.5",
     "@types/formidable": "^3.4.5",
     "@types/lodash": "^4.14.202",
-    "@types/node": "^20.14.2",
+    "@types/node": "^24.9.1",
     "@types/pg": "^8.11.10",
     "nodemon": "^3.0.3",
     "pre-commit": "^1.2.2",

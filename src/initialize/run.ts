@@ -1,12 +1,10 @@
-import express from 'express'
-
-import { errorMiddleware } from 'src/middlewares/error.middlewares'
 import { Application } from 'express-serve-static-core'
-import { corsMiddleware } from 'src/middlewares/cors.middleware'
+import { initializeMiddlewares } from './middlewares'
+import { routesInit } from './route.initialize'
+import { initDB } from './connect-db'
 
-export function registerMiddlewares(app: Application) {
-  app.use(express.json())
-  app.use(express.urlencoded({ extended: true }))
-  app.use(corsMiddleware)
-  app.use(errorMiddleware)
+export function Run(app: Application) {
+  initDB()
+  initializeMiddlewares(app)
+  routesInit(app)
 }

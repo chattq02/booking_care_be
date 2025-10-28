@@ -6,15 +6,15 @@ const options: swaggerJSDoc.Options = {
     info: {
       title: 'My API Documentation',
       version: '1.0.0',
-      description: 'REST API built with Express + Sequelize + TypeScript',
+      description: 'REST API built with Express + Prisma + TypeScript',
       contact: {
-        name: 'Your Team Name',
+        name: 'chattq',
         email: 'support@example.com'
       }
     },
     servers: [
       {
-        url: process.env.API_BASE_URL || 'http://localhost:6000/api',
+        url: process.env.API_BASE_URL,
         description: 'Development server'
       }
     ]
