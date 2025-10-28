@@ -9,4 +9,6 @@ model MessageFile {
 
   // Quan hệ
   message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@map("message_files")
 }

@@ -14,4 +14,6 @@ model Message {
   sender      User          @relation("SentMessages", fields: [senderId], references: [id])
   receiver    User          @relation("ReceivedMessages", fields: [receiverId], references: [id])
   attachments MessageFile[] // Danh sách file đính kèm
+
+  @@map("messages")
 }
