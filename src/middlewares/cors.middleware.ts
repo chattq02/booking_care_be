@@ -4,8 +4,7 @@ import { RequestHandler } from 'express'
 // ✅ Danh sách domain được phép truy cập API
 const allowedOrigins = [
   'http://localhost:3000', // dev frontend
-  'http://127.0.0.1:3000',
-  'https://your-production-domain.com' // thêm domain production ở đây
+  'http://localhost:4000'
 ]
 
 // ✅ Cấu hình CORS nâng cao

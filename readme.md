@@ -1,11 +1,8 @@
-- dragAle: react Beautiful dnd
-- pdf: itext,
-- chat: websocket,
-- sso: chưa tìm hiểu
-  1 controller: viết API để trả về data
-  2 servies: thực hiện kiểm tra, lọc để trả về các thông tin theo điều kiện phụ hợp (tính toán, xử lý code)
-  3: repositores: thực hiện các câu lệnh SQL
-  4: model: nơi lưu trữ dữ liệu
-  5: middlewares: xử lý các dữ liệu đầu vào
+chạy dự án: yarn install
+chạy docker: kết nối db
+chạy db:generate: yarn db:generate
+chạy migration: yarn db:migrate
 
-npx ts-node src/migrations/migrate-runner.ts    // tự động migrations
+chạy server: yarn start
+
+link swagger: http://localhost:4000/api/docs

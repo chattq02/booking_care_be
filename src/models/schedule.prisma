@@ -1,0 +1,16 @@
+// =========================
+// BẢNG CA KHÁM / LỊCH LÀM VIỆC (SCHEDULE)
+// =========================
+model Schedule {
+  id          Int      @id @default(autoincrement()) // Khóa chính
+  doctorId    Int // FK: Bác sĩ phụ trách
+  date        DateTime // Ngày khám
+  startTime   DateTime // Giờ bắt đầu
+  endTime     DateTime // Giờ kết thúc
+  isAvailable Boolean  @default(true) // Còn trống hay không
+
+  doctor       User          @relation(fields: [doctorId], references: [id], onDelete: Cascade) // Liên kết tới bác sĩ
+  appointments Appointment[] // Danh sách các lịch khám trong ca này
+
+  @@map("schedules")
+}

@@ -1,0 +1,12 @@
+model MessageFile {
+  id         Int      @id @default(autoincrement()) // ID tự tăng
+  messageId  Int // Liên kết đến Message
+  fileUrl    String   @db.VarChar(1000) // Đường dẫn file (URL hoặc local path)
+  fileName   String?  @db.VarChar(255) // Tên gốc của file (tùy chọn)
+  fileType   String?  @db.VarChar(100) // MIME type (vd: image/png, video/mp4)
+  fileSize   Int? // Kích thước file (byte)
+  uploadedAt DateTime @default(now()) // Ngày upload
+
+  // Quan hệ
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+}

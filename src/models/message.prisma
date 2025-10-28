@@ -1,0 +1,17 @@
+model Message {
+  id         Int      @id @default(autoincrement()) // ID tự tăng
+  uuid       String   @unique @default(uuid()) // UUID duy nhất
+  senderId   Int // ID người gửi
+  receiverId Int // ID người nhận
+  content    String?  @db.VarChar(2000) // Nội dung văn bản (có thể trống nếu chỉ gửi file)
+  isRead     Boolean  @default(false) // Đã đọc hay chưa
+  createdAt  DateTime @default(now()) // Ngày tạo
+  updatedAt  DateTime @updatedAt // Cập nhật gần nhất
+
+  // -------------------
+  // QUAN HỆ
+  // -------------------
+  sender      User          @relation("SentMessages", fields: [senderId], references: [id])
+  receiver    User          @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  attachments MessageFile[] // Danh sách file đính kèm
+}

@@ -1,0 +1,23 @@
+enum TokenType {
+  ACCESS // Token đăng nhập ngắn hạn (JWT)
+  REFRESH // Token làm mới (refresh token)
+  VERIFY // Token xác minh email
+  RESET // Token đặt lại mật khẩu
+}
+
+model Token {
+  id        Int       @id @default(autoincrement()) // Khóa chính
+  userId    Int // FK: id của user
+  token     String    @unique // Mã token duy nhất (JWT / random string)
+  type      TokenType // Loại token (ACCESS / REFRESH / VERIFY / RESET)
+  expiresAt DateTime // Thời điểm hết hạn token
+  revoked   Boolean   @default(false) // Đánh dấu token đã bị thu hồi chưa
+  createdAt DateTime  @default(now()) // Ngày tạo
+  updatedAt DateTime  @updatedAt // Ngày cập nhật
+
+  // Quan hệ tới User
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("tokens")
+}

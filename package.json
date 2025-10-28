@@ -11,7 +11,6 @@
     "build": "rimraf dist && tsc",
     "start": "node dist/index.js",
     "ts.check": "tsc --project tsconfig.json",
-    "add-build": "git add dist",
     "test": "echo \"Error: no test specified\" && exit 1",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write .",
@@ -26,8 +25,7 @@
   },
   "pre-commit": [
     "ts.check",
-    "build",
-    "add-build"
+    "build"
   ],
   "keywords": [],
   "author": "",

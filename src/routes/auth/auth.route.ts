@@ -5,12 +5,11 @@ const auth_routes = Router()
 
 /**
  * @openapi
- * /api/auth/login:
+ * /v1/auth/register:
  *   post:
  *     tags:
  *       - Auth
- *     summary: Đăng nhập tài khoản
- *     description: Người dùng gửi email và mật khẩu để nhận token đăng nhập.
+ *     summary: Đăng ký tài khoản
  *     requestBody:
  *       required: true
  *       content:
@@ -21,24 +20,28 @@ const auth_routes = Router()
  *               email:
  *                 type: string
  *                 example: user@example.com
+ *               name:
+ *                 type: string
+ *                 example: user name
  *               password:
  *                 type: string
  *                 example: 123456
  *     responses:
  *       200:
- *         description: Đăng nhập thành công
+ *         description: Đăng ký thành công
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 accessToken:
+ *                 access_token:
  *                   type: string
  *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                 refetch_token:
+ *                   type: string
+ *                   example: eyJhbGciOiJIUzI1NiIsInR5cCIsss6IkpXVCJ9...
  *       400:
- *         description: Thiếu thông tin đăng nhập
- *       401:
- *         description: Sai email hoặc mật khẩu
+ *         description: Thiếu thông tin đăng ký
  */
 auth_routes.use('/register', authController.registerController)
 

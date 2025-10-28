@@ -1,0 +1,17 @@
+// =========================
+// BẢNG ĐƠN THUỐC (PRESCRIPTION)
+// =========================
+model Prescription {
+  id            Int     @id @default(autoincrement()) // Khóa chính
+  appointmentId Int     @unique // FK: liên kết tới lịch khám
+  diagnosis     String? // Chẩn đoán bệnh
+  notes         String? // Ghi chú thêm
+
+  appointment Appointment        @relation("AppointmentToPrescription", fields: [appointmentId], references: [id], onDelete: Cascade)
+  items       PrescriptionItem[] // Danh sách thuốc trong đơn
+
+  createdAt DateTime @default(now()) // Thời gian tạo
+  updatedAt DateTime @updatedAt // Cập nhật khi thay đổi
+
+  @@map("prescriptions")
+}

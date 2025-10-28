@@ -1,0 +1,15 @@
+// =========================
+// BẢNG CHI TIẾT THUỐC (PRESCRIPTION ITEM)
+// =========================
+model PrescriptionItem {
+  id               Int     @id @default(autoincrement()) // Khóa chính
+  prescriptionId   Int // FK: liên kết tới đơn thuốc
+  medicineName     String // Tên thuốc
+  dosage           String? // Liều lượng
+  quantity         Int // Số lượng
+  usageInstruction String? // Hướng dẫn sử dụng
+
+  prescription Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+
+  @@map("prescription_items")
+}

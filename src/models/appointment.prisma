@@ -1,0 +1,34 @@
+// =========================
+// BẢNG LỊCH KHÁM (APPOINTMENT)
+// =========================
+
+// Trạng thái của cuộc hẹn khám
+enum AppointmentStatus {
+  PENDING // Chờ xác nhận
+  CONFIRMED // Đã xác nhận
+  COMPLETED // Đã hoàn thành
+  CANCELED // Đã hủy
+}
+
+model Appointment {
+  id   Int    @id @default(autoincrement()) // Khóa chính
+  uuid String @unique @default(uuid()) // Mã định danh duy nhất
+
+  doctorId   Int // FK: Id của bác sĩ (User có role=DOCTOR)
+  patientId  Int // FK: Id của bệnh nhân (User có role=PATIENT)
+  scheduleId Int // FK: Id của ca khám (Schedule)
+
+  status AppointmentStatus @default(PENDING) // Trạng thái của lịch khám
+  note   String? // Ghi chú thêm từ bệnh nhân / bác sĩ
+
+  // Quan hệ
+  doctor       User          @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: Cascade)
+  patient      User          @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
+  schedule     Schedule      @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  prescription Prescription? @relation("AppointmentToPrescription") // Mối quan hệ 1-1 với đơn thuốc
+
+  createdAt DateTime @default(now()) // Thời gian tạo
+  updatedAt DateTime @updatedAt // Cập nhật khi thay đổi
+
+  @@map("appointments") // Tên bảng trong DB
+}

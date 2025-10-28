@@ -1,7 +1,47 @@
+enum UserStatus {
+  ZERO @map("0")
+  ONE  @map("1")
+}
+
+enum Role {
+  ADMIN  @map("admin")
+  DOCTOR @map("doctor")
+  USER   @map("user")
+}
+
+enum Gender {
+  MALE   @map("male") // Nam
+  FEMALE @map("female") // Nữ
+  OTHER  @map("other") // Khác
+}
+
 model User {
-    id        Int      @id @default(autoincrement())
-    email     String   @unique
-    name      String?
-    posts     Post[] // 👈 thêm dòng này
-    createdAt DateTime @default(now())
+  id                   Int       @id @default(autoincrement()) // Khóa chính, tự tăng
+  uuid                 String    @unique @default(uuid()) // Mã định danh duy nhất (UUID)
+  email                String    @unique @db.VarChar(256) // Email đăng nhập (duy nhất)
+  password             String    @db.VarChar(555) // Mật khẩu (đã hash) 
+  fullName             String    @db.VarChar(25) // Họ và tên đầy đủ 
+  phone                String?   @unique @db.VarChar(25) // Số điện thoại (có thể trống)
+  gender               Gender? // Giới tính (Nam/Nữ/Khác)
+  dateOfBirth          DateTime? // Ngày sinh
+  address              String?   @db.VarChar(555) // Địa chỉ 
+  role                 Role      @default(USER) // Vai trò trong hệ thống
+  specialty_id         Int // Chuyên khoa (nếu là bác sĩ)
+  experience           Int? // Số năm kinh nghiệm (nếu là bác sĩ)
+  description          String?   @db.VarChar(555) // Mô tả thêm (nếu là bác sĩ)
+  password_reset_token String?   @db.VarChar(555) // Token dùng để reset mật khẩu
+
+  // Các quan hệ (relationship)
+  appointmentsAsDoctor  Appointment[] @relation("DoctorAppointments") // Danh sách lịch khám mà user là bác sĩ
+  appointmentsAsPatient Appointment[] @relation("PatientAppointments") // Danh sách lịch khám mà user là bệnh nhân
+  schedules             Schedule[] // Các ca làm việc của bác sĩ
+  departments           Department[]  @relation("DoctorDepartments") // Nhiều bác sĩ ↔ nhiều chuyên khoa
+  tokens                Token[]
+  sentMessages          Message[]     @relation("SentMessages")
+  receivedMessages      Message[]     @relation("ReceivedMessages")
+
+  createdAt DateTime @default(now()) // Thời gian tạo
+  updatedAt DateTime @updatedAt // Tự cập nhật khi thay đổi
+
+  @@map("users") // Map tên bảng trong DB thành "users"
 }
