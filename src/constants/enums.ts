@@ -9,3 +9,14 @@ export enum UserVerifyStatus {
   Verified = 'Verified', // đã xác thực email
   Banned = 'Banned' // bị khóa
 }
+
+export const ROLE_VALUE = {
+  USER: 1,
+  ADMIN: 2,
+  SUPER_ADMIN: 3,
+} as const;
+
+export const IS_SUPER_ADMIN = {
+  "1": "YES",
+  "0": "NO"
+} as const

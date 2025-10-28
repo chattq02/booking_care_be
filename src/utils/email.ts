@@ -1,19 +1,9 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-/* eslint-disable no-undef */
-
 import fs from 'fs'
 import path from 'path'
 import nodemailer from 'nodemailer'
+import { config } from 'dotenv'
 
-const sendVerifyEmail = (toAddress: string, subject: string, body: string) => {
-  // const sendEmailCommand = createSendEmailCommand({
-  //   fromAddress: envConfig.sesFromAddress,
-  //   toAddresses: toAddress,
-  //   body,
-  //   subject
-  // })
-  // return sesClient.send(sendEmailCommand)
-}
+config()
 
 export const sendVerifyRegisterEmail = async (toAddress: string, OTP: string) => {
   let verifyEmailTemplate = fs.readFileSync(path.resolve('src/template/verify-email.html'), 'utf8')
@@ -39,18 +29,3 @@ export const sendVerifyRegisterEmail = async (toAddress: string, OTP: string) =>
   return info.messageId
 }
 
-// export const sendForgotPasswordEmail = (
-//   toAddress: string,
-//   forgot_password_token: string,
-//   template: string = verifyEmailTemplate
-// ) => {
-//   return sendVerifyEmail(
-//     toAddress,
-//     'Forgot Password',
-//     template
-//       .replace('{{title}}', 'You are receiving this email because you requested to reset your password')
-//       .replace('{{content}}', 'Click the button below to reset your password')
-//       .replace('{{titleLink}}', 'Reset Password')
-//       .replace('{{link}}', `${envConfig.clientUrl}/forgot-password?token=${forgot_password_token}`)
-//   )
-// }

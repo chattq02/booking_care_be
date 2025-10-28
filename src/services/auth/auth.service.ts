@@ -1,4 +1,4 @@
-import { TokenType, UserVerifyStatus } from 'src/constants/enums'
+import { IS_SUPER_ADMIN, TokenType, UserVerifyStatus } from 'src/constants/enums'
 import { RegisterDto } from 'src/dtos/auth/register.dto'
 import { AuthRepository } from 'src/repository/auth/auth.repository'
 import { signToken, verifyToken } from 'src/utils/jwt'
@@ -7,6 +7,7 @@ import { Response } from 'express'
 import { ResultsReturned } from 'src/utils/results-api'
 import { httpStatusCode } from 'src/constants/httpStatus'
 import { VerifyEmailDto } from 'src/dtos/auth/email.dto'
+import { sendVerifyRegisterEmail } from 'src/utils/email'
 
 export class AuthService {
   private authRepo = new AuthRepository()
@@ -80,16 +81,27 @@ export class AuthService {
   }
 
   verifyEmailAdmin = async (dto: VerifyEmailDto, res: Response) => {
-    const existing = await this.authRepo.findByEmail(dto.email)
-    if (existing) {
-      return res.json(
-        new ResultsReturned({
-          isSuccess: false,
-          status: httpStatusCode.BAD_REQUEST,
-          message: 'Email đã tồn tại',
-          data: existing
-        })
-      )
-    }
+    // const is_supper_admin = await this.authRepo.findByEmailVerify(dto.email, IS_SUPER_ADMIN["1"])
+
+    // if (!is_supper_admin) {
+    //   return res.json(
+    //     new ResultsReturned({
+    //       isSuccess: false,
+    //       status: httpStatusCode.FORBIDDEN,
+    //       message: 'Không có quyền truy cập',
+    //       data: null
+    //     })
+    //   )
+    // }
+    await sendVerifyRegisterEmail(dto.email, "123")
+
+    return res.json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Đã gửi đến mail thành công',
+        data: null
+      })
+    )
   }
 }
