@@ -1,5 +1,6 @@
-import { IsVerify, SupperAdmin, User } from '@prisma/client'
+import { User } from '@prisma/client'
 import { prisma } from 'src/config/database.config'
+import { YES_NO_FLAG_VALUE, YesNoFlagKey } from 'src/constants/enums'
 import { RegisterDto } from 'src/dtos/auth/register.dto'
 import { hasPassword } from 'src/utils/crypto'
 
@@ -23,12 +24,19 @@ export class AuthRepository {
     return prisma.user.findUnique({ where: { id } })
   }
 
-  async findByEmailVerify(email: string, is_supper_admin: SupperAdmin): Promise<Pick<User, 'is_supper_admin'> | null> {
-    return prisma.user.findFirst({
-      where: { email, is_supper_admin },
-      select: {
-        is_supper_admin: true
-      }
+  async findByEmailIsVerify(email: string): Promise<YesNoFlagKey | null> {
+    const user = await prisma.user.findFirst({
+      where: { email },
+      select: { is_verify: true }
     })
+    return user?.is_verify ?? null
+  }
+
+  async verifyEmail(email: string): Promise<Boolean> {
+    await prisma.user.update({
+      where: { email },
+      data: { is_verify: YES_NO_FLAG_VALUE['1'] }
+    })
+    return true
   }
 }

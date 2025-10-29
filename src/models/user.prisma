@@ -43,6 +43,7 @@ model User {
   is_verify            IsVerify        @default(NO) // Đã xác minh email chưa
   is_update_profile    IsUpdateProfile @default(NO) // Đã cập nhật thông tin cá nhân chưa
   is_supper_admin      SupperAdmin     @default(NO) // Là admin cao nhất hay không
+  created_by           Int? // Người tạo
 
   // Các quan hệ (relationship)
   appointmentsAsDoctor  Appointment[] @relation("DoctorAppointments") // Danh sách lịch khám mà user là bác sĩ

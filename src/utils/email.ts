@@ -5,13 +5,15 @@ import { config } from 'dotenv'
 
 config()
 
-export const sendVerifyRegisterEmail = async (toAddress: string, OTP: string) => {
+export const sendVerifyRegisterEmail = async (toAddress: string, tokenVerifyEmail: string) => {
+  const verify_url = `${process.env.FE_BASE_URL_DOCTOR}/verify-email?token=${tokenVerifyEmail}`
+
   let verifyEmailTemplate = fs.readFileSync(path.resolve('src/template/verify-email.html'), 'utf8')
-  verifyEmailTemplate = verifyEmailTemplate.replace('{{OTP}}', `${OTP}`)
+  verifyEmailTemplate = verifyEmailTemplate.replace('{{VERIFY_URL}}', `${verify_url}`)
   const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // true for port 465, false for other ports
+    host: process.env.MAIL_HOST,
+    port: Number(process.env.MAIL_PORT),
+    secure: false,
     auth: {
       user: process.env.EMAIL_USERNAME,
       pass: process.env.EMAIL_PASSWORD
@@ -19,7 +21,7 @@ export const sendVerifyRegisterEmail = async (toAddress: string, OTP: string) =>
   })
 
   const info = await transporter.sendMail({
-    from: `"Hệ thống E-Learning" <${process.env.EMAIL_USERNAME}>`, // người gửi và email người gửi
+    from: `"Hệ thống Booking Care" <${process.env.EMAIL_USERNAME}>`, // người gửi và email người gửi
     to: toAddress, // // người nhận
     subject: 'Xác thực tài khoản tài khoản', // tiêu đề
     text: 'Xác thực tài khoản tài khoản', // plain text body
@@ -28,4 +30,3 @@ export const sendVerifyRegisterEmail = async (toAddress: string, OTP: string) =>
   })
   return info.messageId
 }
-
