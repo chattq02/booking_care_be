@@ -15,10 +15,10 @@ config()
 export class AuthService {
   private authRepo = new AuthRepository()
 
-  private signAccessToken({ email }: { email: string }) {
+  private signAccessToken({ sub }: { sub: string }) {
     return signToken({
       payload: {
-        email
+        sub
       },
       privateKey: process.env.JWT_SECRET_ACCESS_TOKEN as string,
       options: {
@@ -27,10 +27,10 @@ export class AuthService {
     })
   }
 
-  private signRefreshToken({ email }: { email: string }) {
+  private signRefreshToken({ sub }: { sub: string }) {
     return signToken({
       payload: {
-        email
+        sub
       },
       privateKey: process.env.JWT_SECRET_REFRESH_TOKEN as string,
       options: {
@@ -65,8 +65,8 @@ export class AuthService {
     })
   }
 
-  private signAccessAndRefreshToken({ email }: { email: string }) {
-    return Promise.all([this.signAccessToken({ email }), this.signRefreshToken({ email })])
+  private signAccessAndRefreshToken({ sub }: { sub: string }) {
+    return Promise.all([this.signAccessToken({ sub }), this.signRefreshToken({ sub })])
   }
 
   register = async (dto: RegisterDto, res: Response) => {
@@ -154,23 +154,7 @@ export class AuthService {
     }
 
     const [access_token, refresh_token] = await this.signAccessAndRefreshToken({
-      email: dto.email
-    })
-
-    res.cookie('access_token', access_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000, // 1 ngày
-      path: '/'
-    })
-
-    res.cookie('refresh_token', refresh_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 100 * 24 * 60 * 60 * 1000, // 100 ngày
-      path: '/'
+      sub: user.uuid
     })
 
     return res.status(httpStatusCode.OK).json(
