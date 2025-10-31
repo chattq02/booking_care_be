@@ -7,7 +7,7 @@ enum TokenType {
 
 model Token {
   id        Int       @id @default(autoincrement()) // Khóa chính
-  userId    Int // FK: id của user
+  userId    Int       @unique // FK: id của user
   token     String    @unique // Mã token duy nhất (JWT / random string)
   type      TokenType // Loại token (ACCESS / REFRESH / VERIFY / RESET)
   expiresAt DateTime // Thời điểm hết hạn token

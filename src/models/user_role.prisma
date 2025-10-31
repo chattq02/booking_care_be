@@ -1,0 +1,17 @@
+enum Role {
+  ADMIN  @map("admin")
+  DOCTOR @map("doctor")
+  USER   @map("user")
+}
+
+model UserRole {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  role       Role // enum cố định
+  assignedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, role]) // 1 user không thể có cùng role 2 lần
+  @@map("user_roles")
+}

@@ -1,6 +1,6 @@
 import { IsNotEmpty } from 'class-validator'
 
-export class EmailDto {
+export class LogoutDto {
   @IsNotEmpty()
-  email!: string
+  refresh_token!: string
 }

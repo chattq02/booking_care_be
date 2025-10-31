@@ -10,6 +10,13 @@ export enum UserVerifyStatus {
   Banned = 'Banned' // bị khóa
 }
 
+export const TOKEN_EXPIRES = {
+  ACCESS: 1 * 24 * 60 * 60 * 1000, // 1 ngày
+  REFRESH: 100 * 24 * 60 * 60 * 1000, // 100 ngày
+  VERIFY: 1 * 24 * 60 * 60 * 1000, // 1 ngày
+  RESET: 1 * 60 * 60 * 1000 // 1 giờ
+} as const
+
 export const ROLE_VALUE = {
   USER: 1,
   ADMIN: 2,

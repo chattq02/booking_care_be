@@ -1,33 +1,57 @@
-import { Router, RequestHandler } from 'express'
-// import { authorize } from "../middleware/authorize";
+import { Role } from '@prisma/client'
+import { RequestHandler, Router } from 'express'
+import { authMiddleware } from 'src/middlewares/auth.middleware'
 
-/**
- * Tạo router hỗ trợ:
- * - protected route theo role
- * - public route
- */
-export function createRoleRouter(defaultRole?: string) {
+type Method = 'get' | 'post' | 'put' | 'delete' | 'patch'
+
+export function createRoleRouter(defaultRole?: Role) {
   const router = Router()
 
-  // protected route theo role mặc định
-  const protectedRoute = (
-    method: 'get' | 'post' | 'put' | 'delete',
-    path: string,
-    handlers: RequestHandler | RequestHandler[],
-    roles?: string[] // override role nếu muốn
-  ) => {
-    const r = roles || (defaultRole ? [defaultRole] : [])
-    // router[method](path, r.length ? authorize(r) : [], ...(Array.isArray(handlers) ? handlers : [handlers]));
+  function createProtectedRoute(method: Method) {
+    return (path: string, ...handlers: RequestHandler[]) => {
+      const roles = defaultRole ? [defaultRole] : []
+      if (roles.length > 0) {
+        router[method](path, authMiddleware(roles), ...handlers)
+      } else {
+        router[method](path, authMiddleware(), ...handlers)
+      }
+    }
   }
 
-  // public route không cần token
-  const publicRoute = (
-    method: 'get' | 'post' | 'put' | 'delete',
-    path: string,
-    handlers: RequestHandler | RequestHandler[]
-  ) => {
-    router[method](path, ...(Array.isArray(handlers) ? handlers : [handlers]))
+  function createProtectedRouteWithRoles(method: Method) {
+    return (path: string, roles: Role[], ...handlers: RequestHandler[]) => {
+      router[method](path, authMiddleware(roles), ...handlers)
+    }
   }
 
-  return { router, protectedRoute, publicRoute }
+  function createPublicRoute(method: Method) {
+    return (path: string, ...handlers: RequestHandler[]) => {
+      router[method](path, ...handlers)
+    }
+  }
+
+  return {
+    router,
+    protectedRoute: {
+      get: createProtectedRoute('get'),
+      post: createProtectedRoute('post'),
+      put: createProtectedRoute('put'),
+      delete: createProtectedRoute('delete'),
+      patch: createPublicRoute('patch')
+    },
+    protectedWithRoles: {
+      get: createProtectedRouteWithRoles('get'),
+      post: createProtectedRouteWithRoles('post'),
+      put: createProtectedRouteWithRoles('put'),
+      delete: createProtectedRouteWithRoles('delete'),
+      patch: createPublicRoute('patch')
+    },
+    publicRoute: {
+      get: createPublicRoute('get'),
+      post: createPublicRoute('post'),
+      put: createPublicRoute('put'),
+      delete: createPublicRoute('delete'),
+      patch: createPublicRoute('patch')
+    }
+  }
 }

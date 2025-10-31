@@ -10,11 +10,14 @@ export const errorMiddleware = (err: any, _req: Request, res: Response, _next: N
   let message = err.message || 'Lỗi hệ thống, vui lòng thử lại sau.'
 
   // Trường hợp lỗi xác thực JWT
-  if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
-    status = httpStatusCode.BAD_REQUEST
-    message = 'Token không hợp lệ hoặc đã hết hạn.'
+  if (err.name === 'JsonWebTokenError') {
+    status = httpStatusCode.UNAUTHORIZED
+    message = 'Token không hợp lệ'
   }
-
+  if (err.name === 'TokenExpiredError') {
+    status = httpStatusCode.UNAUTHORIZED
+    message = 'Token đã hết hạn.'
+  }
   // Trả response đồng nhất
   return res.status(httpStatusCode.INTERNAL_SERVER_ERROR).json(
     new ResultsReturned({

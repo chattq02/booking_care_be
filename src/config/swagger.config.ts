@@ -12,6 +12,15 @@ const options: swaggerJSDoc.Options = {
         email: 'support@example.com'
       }
     },
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT'
+        }
+      }
+    },
     servers: [
       {
         url: process.env.API_BASE_URL,

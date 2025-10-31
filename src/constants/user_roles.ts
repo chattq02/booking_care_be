@@ -3,3 +3,8 @@ export enum USER_ROLE {
   DOCTOR = 'doctor',
   USER = 'user'
 }
+
+export enum UserStatus {
+  ACTIVE = 'Active',
+  INACTIVE = 'InActive'
+}

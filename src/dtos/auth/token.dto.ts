@@ -1,6 +1,6 @@
 import { IsNotEmpty } from 'class-validator'
 
-export class EmailDto {
+export class TokenDto {
   @IsNotEmpty()
-  email!: string
+  token!: string
 }
