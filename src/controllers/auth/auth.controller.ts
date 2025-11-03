@@ -17,7 +17,7 @@ class AuthController {
   }
 
   refreshTokenController = async (req: Request, res: Response) => {
-    return this.authService.refreshToken(req.body, res)
+    return this.authService.refreshToken(req.cookies as { access_token: string; refresh_token: string }, res)
   }
 
   forgotPasswordController = async (req: Request, res: Response) => {
@@ -29,7 +29,7 @@ class AuthController {
   }
 
   meController = async (req: Request, res: Response) => {
-    return this.authService.getMe(req.cookies as { access_token: string }, res)
+    return this.authService.getMe(req.cookies as { access_token: string; refresh_token: string }, res)
   }
 
   verifyEmailController = async (req: Request, res: Response) => {

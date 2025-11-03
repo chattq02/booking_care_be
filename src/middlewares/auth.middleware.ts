@@ -11,9 +11,10 @@ export function authMiddleware(roles: string[] = []) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const accessToken = req.cookies.access_token
-      const allowedRoles = JSON.parse(req.cookies.roles)
+      // const authHeader = req.headers['authorization']
+      // const accessToken = authHeader && authHeader.split(' ')[1] // Bearer <token>
+      const allowedRoles = JSON.parse(req.cookies.roles || '[]')
       const userActive = req.cookies.user_active
-
       if (!accessToken) {
         return res.status(httpStatusCode.UNAUTHORIZED).json(
           new ResultsReturned({
@@ -41,10 +42,10 @@ export function authMiddleware(roles: string[] = []) {
       }
 
       if (userActive === 'InActive') {
-        return res.status(httpStatusCode.UNAUTHORIZED).json(
+        return res.status(httpStatusCode.FORBIDDEN).json(
           new ResultsReturned({
             isSuccess: true,
-            status: httpStatusCode.UNAUTHORIZED,
+            status: httpStatusCode.FORBIDDEN,
             message: 'Tài khoản của bạn chưa được kích hoạt',
             data: null
           })

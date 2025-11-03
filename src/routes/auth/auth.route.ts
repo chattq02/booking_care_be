@@ -96,14 +96,14 @@ protectedRoute.post('/register', validateDto(RegisterDto), wrapRequestHandler(au
  *           schema:
  *             type: object
  *             properties:
- *               access_token:
+ *               lang:
  *                 type: string
- *                 example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                 example: vn
  *     responses:
  *       200:
  *         description: refresh-token successfully
  */
-publicRoute.post('/refresh-token', validateDto(TokenDto), wrapRequestHandler(authController.refreshTokenController))
+publicRoute.post('/refresh-token', wrapRequestHandler(authController.refreshTokenController))
 
 /**
  * @openapi

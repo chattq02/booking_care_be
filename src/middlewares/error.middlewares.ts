@@ -12,11 +12,11 @@ export const errorMiddleware = (err: any, _req: Request, res: Response, _next: N
   // Trường hợp lỗi xác thực JWT
   if (err.name === 'JsonWebTokenError') {
     status = httpStatusCode.UNAUTHORIZED
-    message = 'Token không hợp lệ'
+    message = 'JsonWebTokenError'
   }
   if (err.name === 'TokenExpiredError') {
     status = httpStatusCode.UNAUTHORIZED
-    message = 'Token đã hết hạn.'
+    message = 'TokenExpiredError'
   }
   // Trả response đồng nhất
   return res.status(httpStatusCode.INTERNAL_SERVER_ERROR).json(

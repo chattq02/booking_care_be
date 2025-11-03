@@ -69,10 +69,11 @@ export class AuthRepository {
   async findUserByTokenVerify(
     token: string,
     type: TokenType
-  ): Promise<Pick<User, 'id' | 'uuid' | 'email' | 'is_verify' | 'fullName'> | null> {
-    const tokenRecord = await prisma.token.findUnique({
-      where: { token, type }, // 🔹 phải đảm bảo token có unique index
+  ): Promise<{ user: Pick<User, 'id' | 'uuid' | 'email' | 'is_verify' | 'fullName'>; expiresAt: Date } | null> {
+    const tokenRecord = await prisma.token.findFirst({
+      where: { token, type },
       select: {
+        expiresAt: true,
         user: {
           select: {
             id: true,
@@ -84,7 +85,8 @@ export class AuthRepository {
         }
       }
     })
-    return tokenRecord?.user ?? null
+
+    return tokenRecord ?? null
   }
 
   async findById(id: number): Promise<User | null> {

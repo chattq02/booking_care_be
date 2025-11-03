@@ -192,32 +192,32 @@ export class AuthService {
 
     res.cookie('access_token', access_token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true,
+      sameSite: 'none',
       maxAge: TOKEN_EXPIRES.ACCESS, // 1 ngày
       path: '/'
     })
 
     res.cookie('refresh_token', refresh_token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true,
+      sameSite: 'none',
       maxAge: TOKEN_EXPIRES.REFRESH, // 100 ngày
       path: '/'
     })
     const rolesCookie = JSON.stringify(user.roles.map((val) => val.role))
 
     res.cookie('roles', rolesCookie, {
-      httpOnly: false, // cho phép JS đọc
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      httpOnly: true, // cho phép JS đọc
+      secure: true,
+      sameSite: 'none',
       maxAge: TOKEN_EXPIRES.ACCESS
     })
 
     res.cookie('user_active', user.user_status, {
-      httpOnly: false, // cho phép JS đọc
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      httpOnly: true, // cho phép JS đọc
+      secure: true,
+      sameSite: 'none',
       maxAge: TOKEN_EXPIRES.ACCESS
     })
 
@@ -236,14 +236,81 @@ export class AuthService {
         status: httpStatusCode.OK,
         message: 'Đăng nhập thành công',
         data: {
-          access_token,
-          refresh_token
+          access_token
         }
       })
     )
   }
 
-  refreshToken = async (dto: TokenDto, res: Response) => {}
+  refreshToken = async (
+    cookies: {
+      access_token: string
+      refresh_token: string
+    },
+    res: Response
+  ) => {
+    // lấy refresh token từ cookie
+    const refreshToken = cookies.refresh_token
+
+    if (!refreshToken) {
+      return res.status(httpStatusCode.UNAUTHORIZED).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.UNAUTHORIZED,
+          message: 'Refresh_token không tồn tại',
+          data: null
+        })
+      )
+    }
+
+    const decoded = await this.decodeRefreshToken(refreshToken)
+
+    if (!decoded) {
+      return res.status(httpStatusCode.UNAUTHORIZED).json(
+        new ResultsReturned({
+          isSuccess: true,
+          status: httpStatusCode.UNAUTHORIZED,
+          message: 'Vui lòng đăng nhập lại',
+          data: null
+        })
+      )
+    }
+
+    // so với refresh token trong db
+    const session = await this.authRepo.findUserByTokenVerify(refreshToken, 'REFRESH')
+
+    if (!session) {
+      return res.status(httpStatusCode.UNAUTHORIZED).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.UNAUTHORIZED,
+          message: 'Refresh_token không hợp lệ',
+          data: null
+        })
+      )
+    }
+
+    const access_token = await this.signAccessToken({ sub: session.user.uuid })
+
+    res.cookie('access_token', access_token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: TOKEN_EXPIRES.ACCESS, // 1 ngày
+      path: '/'
+    })
+
+    return res.status(httpStatusCode.OK).json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Lấy access_token thành công',
+        data: {
+          access_token
+        }
+      })
+    )
+  }
 
   forgotPassword = async (dto: TokenDto, res: Response) => {}
 
@@ -252,10 +319,12 @@ export class AuthService {
   getMe = async (
     cookies: {
       access_token: string
+      refresh_token: string
     },
     res: Response
   ) => {
     const accessToken = cookies.access_token
+
     const decoded_access = await this.decodeAccessToken(accessToken)
 
     const user = await this.authRepo.findUserByUuid(decoded_access.sub)
@@ -263,7 +332,7 @@ export class AuthService {
     if (!user) {
       res.status(httpStatusCode.NOT_FOUND).json(
         new ResultsReturned({
-          isSuccess: true,
+          isSuccess: false,
           status: httpStatusCode.NOT_FOUND,
           message: 'Không tìm thấy người dùng',
           data: null
@@ -291,6 +360,42 @@ export class AuthService {
     res: Response
   ) => {
     const refreshToken = cookies.refresh_token
+
+    res.clearCookie('refresh_token', {
+      httpOnly: true,
+      secure: true, // bật khi deploy
+      sameSite: 'strict', // hoặc 'none' nếu dùng cross-origin
+      path: '/' // cần khớp với path lúc set cookie
+    })
+
+    res.clearCookie('access_token', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      path: '/'
+    })
+
+    res.clearCookie('refresh_token', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      path: '/'
+    })
+
+    res.clearCookie('roles', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      path: '/'
+    })
+
+    res.clearCookie('user_active', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      path: '/'
+    })
+
     await this.authRepo.removeTokenByRefreshToken(refreshToken, 'REFRESH')
     return res.json(
       new ResultsReturned({
@@ -349,7 +454,7 @@ export class AuthService {
     const existing = await this.authRepo.findUserByTokenVerify(dto.token, 'VERIFY')
 
     // Nếu không thấy thì tk đã được xác minh
-    if (!existing) {
+    if (!existing?.user) {
       return res.status(httpStatusCode.BAD_REQUEST).json(
         new ResultsReturned({
           isSuccess: false,
@@ -360,15 +465,15 @@ export class AuthService {
       )
     }
 
-    const tokenVerifyEmail = await this.signTokenVerifyEmail({ sub: existing.uuid })
+    const tokenVerifyEmail = await this.signTokenVerifyEmail({ sub: existing?.user.uuid })
 
     // 4️⃣ Gửi email xác thực
-    sendVerifyRegisterEmail(existing.uuid, tokenVerifyEmail)
+    sendVerifyRegisterEmail(existing?.user.uuid, tokenVerifyEmail)
     const verifyExpiresAt = new Date(Date.now() + TOKEN_EXPIRES.VERIFY)
 
     // 5 Lưu token vào db
     await this.authRepo.updateAndCreateTokenById({
-      id: existing.id,
+      id: existing?.user.id,
       token: tokenVerifyEmail,
       type: 'VERIFY',
       expiresAt: verifyExpiresAt
