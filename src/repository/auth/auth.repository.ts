@@ -11,31 +11,34 @@ export class AuthRepository {
       data: {
         fullName: data.name,
         email: data.email,
-        password: hasPassword(data.password)
+        password: hasPassword(data.password),
+        roles: {
+          create: data.roles.map((r) => ({ role: r.role })) // ✅ tạo nhiều role
+        }
       }
     })
   }
 
   async findByEmail(email: string): Promise<
     | (Pick<
-        User,
-        | 'id'
-        | 'uuid'
-        | 'email'
-        | 'fullName'
-        | 'phone'
-        | 'gender'
-        | 'dateOfBirth'
-        | 'address'
-        | 'is_supper_admin'
-        | 'createdAt'
-        | 'updatedAt'
-        | 'is_verify'
-        | 'user_status'
-        | 'password'
-      > & {
-        roles: { role: Role }[]
-      })
+      User,
+      | 'id'
+      | 'uuid'
+      | 'email'
+      | 'fullName'
+      | 'phone'
+      | 'gender'
+      | 'dateOfBirth'
+      | 'address'
+      | 'is_supper_admin'
+      | 'createdAt'
+      | 'updatedAt'
+      | 'is_verify'
+      | 'user_status'
+      | 'password'
+    > & {
+      roles: { role: Role }[]
+    })
     | null
   > {
     const user = await prisma.user.findUnique({
@@ -95,21 +98,21 @@ export class AuthRepository {
 
   async findUserByUuid(user_uuid: string): Promise<
     | (Pick<
-        User,
-        | 'id'
-        | 'uuid'
-        | 'email'
-        | 'fullName'
-        | 'phone'
-        | 'gender'
-        | 'dateOfBirth'
-        | 'address'
-        | 'is_supper_admin'
-        | 'createdAt'
-        | 'updatedAt'
-      > & {
-        roles: { role: Role }[]
-      })
+      User,
+      | 'id'
+      | 'uuid'
+      | 'email'
+      | 'fullName'
+      | 'phone'
+      | 'gender'
+      | 'dateOfBirth'
+      | 'address'
+      | 'is_supper_admin'
+      | 'createdAt'
+      | 'updatedAt'
+    > & {
+      roles: { role: Role }[]
+    })
     | null
   > {
     const user = await prisma.user.findUnique({

@@ -71,9 +71,9 @@ publicRoute.post('/login', validateDto(LoginDto), wrapRequestHandler(authControl
  *               password:
  *                 type: string
  *                 example: Password@123
- *               role:
+ *               roles:
  *                 type: string
- *                 example: USER
+ *                 example:  [{ role: "ADMIN" }]
  *     responses:
  *       200:
  *         description: Đăng ký thành công

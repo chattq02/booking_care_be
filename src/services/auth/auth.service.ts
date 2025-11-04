@@ -312,9 +312,9 @@ export class AuthService {
     )
   }
 
-  forgotPassword = async (dto: TokenDto, res: Response) => {}
+  forgotPassword = async (dto: TokenDto, res: Response) => { }
 
-  resetPassword = async (dto: EmailDto, res: Response) => {}
+  resetPassword = async (dto: EmailDto, res: Response) => { }
 
   getMe = async (
     cookies: {

@@ -1,4 +1,4 @@
-import { Role } from '@prisma/client'
+import { UserRole } from '@prisma/client'
 import { IsEmail, IsNotEmpty, MinLength, IsIn, Matches } from 'class-validator'
 
 export class RegisterDto {
@@ -18,5 +18,5 @@ export class RegisterDto {
   password!: string
 
   @IsIn(['ADMIN', 'DOCTOR', 'USER'])
-  role!: Role
+  roles!: UserRole[]
 }

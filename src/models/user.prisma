@@ -50,9 +50,9 @@ model User {
   remark               String? // Ghi chú
   practice_certificate String? // chứng chỉ hành nghề
 
-  specialty_id          Int?      // Chuyên khoa (nếu là bác sĩ)
-  experience            Int?      // Số năm kinh nghiệm (nếu là bác sĩ)
-  description           String?    // Mô tả thêm (nếu là bác sĩ)
+  specialty_id          Int? // Chuyên khoa (nếu là bác sĩ)
+  experience            Int? // Số năm kinh nghiệm (nếu là bác sĩ)
+  description           String? // Mô tả thêm (nếu là bác sĩ)
   password_reset_token  String?         @db.VarChar(555) // Token dùng để reset mật khẩu
   is_verify             IsVerify        @default(NO) // Đã xác minh email chưa
   is_update_profile     IsUpdateProfile @default(NO) // Đã cập nhật thông tin cá nhân chưa
