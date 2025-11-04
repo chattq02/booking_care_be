@@ -14,6 +14,12 @@ enum IsVerify {
   NO  @map("0") // trong DB sẽ là 0
 }
 
+enum UserType {
+  Admin
+  Doctor
+  Patient
+}
+
 enum IsUpdateProfile {
   YES @map("1") // trong DB sẽ là 1
   NO  @map("0") // trong DB sẽ là 0
@@ -22,22 +28,31 @@ enum IsUpdateProfile {
 enum UserStatus {
   Active
   InActive
+  Banned
+  Pending
 }
 
 model User {
-  id          Int       @id @default(autoincrement()) // Khóa chính, tự tăng
-  uuid        String    @unique @default(uuid()) // Mã định danh duy nhất (UUID)
-  email       String    @unique @db.VarChar(256) // Email đăng nhập (duy nhất)
-  password    String    @db.VarChar(555) // Mật khẩu (đã hash) 
-  fullName    String    @db.VarChar(25) // Họ và tên đầy đủ 
-  phone       String?   @unique @db.VarChar(25) // Số điện thoại (có thể trống)
-  gender      Gender? // Giới tính (Nam/Nữ/Khác)
-  dateOfBirth DateTime? // Ngày sinh
-  address     String?   @db.VarChar(555) // Địa chỉ 
+  id                   Int       @id @default(autoincrement()) // Khóa chính, tự tăng
+  uuid                 String    @unique @default(uuid()) // Mã định danh duy nhất (UUID)
+  email                String    @unique @db.VarChar(255) // Email đăng nhập (duy nhất)
+  password             String    @db.VarChar(555) // Mật khẩu (đã hash) 
+  fullName             String    @db.VarChar(255) // Họ và tên đầy đủ 
+  phone                String?   @unique @db.VarChar(255) // Số điện thoại (có thể trống)
+  gender               Gender? // Giới tính (Nam/Nữ/Khác)
+  dateOfBirth          DateTime? // Ngày sinh
+  address              String?   @db.VarChar(555) // Địa chỉ 
+  user_type            UserType  @default(Patient) // Loại người dùng (Admin/Bác sĩ/Bệnh nhân)
+  cccd                 String?   @db.VarChar(255) // CCCD (chứng minh nhân dân)
+  bhyt                 String?   @db.VarChar(255) // BHYT (bảo hiểm y tế)
+  nation               String?   @db.VarChar(255) // Dân tộc
+  avatar               String? // Đường dẫn ảnh đại diện
+  remark               String? // Ghi chú
+  practice_certificate String? // chứng chỉ hành nghề
 
-  specialty_id          Int? // Chuyên khoa (nếu là bác sĩ)
-  experience            Int? // Số năm kinh nghiệm (nếu là bác sĩ)
-  description           String?         @db.VarChar(555) // Mô tả thêm (nếu là bác sĩ)
+  specialty_id          Int?      // Chuyên khoa (nếu là bác sĩ)
+  experience            Int?      // Số năm kinh nghiệm (nếu là bác sĩ)
+  description           String?    // Mô tả thêm (nếu là bác sĩ)
   password_reset_token  String?         @db.VarChar(555) // Token dùng để reset mật khẩu
   is_verify             IsVerify        @default(NO) // Đã xác minh email chưa
   is_update_profile     IsUpdateProfile @default(NO) // Đã cập nhật thông tin cá nhân chưa

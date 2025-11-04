@@ -1,6 +1,6 @@
 import { Application } from 'express'
 import { swaggerSpec } from 'src/config/swagger.config'
-import use_routes_v1 from 'src/routes/use-routes-v1'
+import use_routes_v1 from 'src/routes/v1'
 import { serve, setup } from 'swagger-ui-express'
 
 export function routesInit(app: Application) {

@@ -1,0 +1,74 @@
+import { Prisma, User, UserStatus, UserType } from '@prisma/client'
+import { prisma } from 'src/config/database.config'
+
+export class DoctorRepository {
+  async findManyUserType(
+    keyword: string,
+    status: UserStatus | 'All',
+    user_type: UserType,
+    skip = 0,
+    take = 100
+  ): Promise<{
+    data: Pick<
+      User,
+      | 'id'
+      | 'uuid'
+      | 'email'
+      | 'fullName'
+      | 'phone'
+      | 'gender'
+      | 'dateOfBirth'
+      | 'address'
+      | 'createdAt'
+      | 'avatar'
+      | 'user_status'
+      | 'cccd'
+      | 'is_update_profile'
+    >[]
+    total: number
+  }> {
+    const where: Prisma.UserWhereInput = {
+      user_type,
+      AND: [
+        keyword
+          ? {
+              OR: [
+                { fullName: { contains: keyword, mode: 'insensitive' } },
+                { email: { contains: keyword, mode: 'insensitive' } },
+                { phone: { contains: keyword, mode: 'insensitive' } },
+                { cccd: { contains: keyword, mode: 'insensitive' } }
+              ]
+            }
+          : {},
+        status && status !== 'All' ? { user_status: { equals: status as UserStatus } } : {}
+      ]
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { id: 'desc' },
+        select: {
+          id: true,
+          uuid: true,
+          email: true,
+          fullName: true,
+          phone: true,
+          gender: true,
+          dateOfBirth: true,
+          address: true,
+          createdAt: true,
+          avatar: true,
+          user_status: true,
+          cccd: true,
+          is_update_profile: true
+        }
+      }),
+      prisma.user.count({ where })
+    ])
+
+    return { data, total }
+  }
+}

@@ -4,7 +4,10 @@ import { Request, Response, NextFunction } from 'express'
 
 export const validateDto = (DtoClass: any) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const dtoInstance = plainToInstance(DtoClass, req.body)
+    const data = req.method === 'GET' ? req.query : req.body
+
+    // ✅ Convert sang instance của class
+    const dtoInstance = plainToInstance(DtoClass, data)
 
     const errors = await validate(dtoInstance, {
       whitelist: true, // chỉ giữ lại field có trong DTO
