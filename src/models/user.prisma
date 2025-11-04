@@ -50,24 +50,26 @@ model User {
   remark               String? // Ghi chú
   practice_certificate String? // chứng chỉ hành nghề
 
-  specialty_id          Int? // Chuyên khoa (nếu là bác sĩ)
-  experience            Int? // Số năm kinh nghiệm (nếu là bác sĩ)
-  description           String? // Mô tả thêm (nếu là bác sĩ)
-  password_reset_token  String?         @db.VarChar(555) // Token dùng để reset mật khẩu
-  is_verify             IsVerify        @default(NO) // Đã xác minh email chưa
-  is_update_profile     IsUpdateProfile @default(NO) // Đã cập nhật thông tin cá nhân chưa
-  is_supper_admin       SupperAdmin     @default(NO) // Là admin cao nhất hay không
-  user_status           UserStatus      @default(InActive)
-  created_by            Int? // Người tạo
+  specialty_id         Int? // Chuyên khoa (nếu là bác sĩ)
+  experience           Int? // Số năm kinh nghiệm (nếu là bác sĩ)
+  description          String? // Mô tả thêm (nếu là bác sĩ)
+  password_reset_token String?         @db.VarChar(555) // Token dùng để reset mật khẩu
+  is_verify            IsVerify        @default(NO) // Đã xác minh email chưa
+  is_update_profile    IsUpdateProfile @default(NO) // Đã cập nhật thông tin cá nhân chưa
+  is_supper_admin      SupperAdmin     @default(NO) // Là admin cao nhất hay không
+  user_status          UserStatus      @default(InActive)
+  created_by           Int? // Người tạo
+  academicTitleId      Int? // FK: Id của học vị / chức danh
+
+  academicTitle         AcademicTitle? @relation(fields: [academicTitleId], references: [id], onDelete: Restrict)
   roles                 UserRole[]
-  // Các quan hệ (relationship)
-  appointmentsAsDoctor  Appointment[]   @relation("DoctorAppointments") // Danh sách lịch khám mà user là bác sĩ
-  appointmentsAsPatient Appointment[]   @relation("PatientAppointments") // Danh sách lịch khám mà user là bệnh nhân
+  appointmentsAsDoctor  Appointment[]  @relation("DoctorAppointments") // Danh sách lịch khám mà user là bác sĩ
+  appointmentsAsPatient Appointment[]  @relation("PatientAppointments") // Danh sách lịch khám mà user là bệnh nhân
   schedules             Schedule[] // Các ca làm việc của bác sĩ
-  departments           Department[]    @relation("DoctorDepartments") // Nhiều bác sĩ ↔ nhiều chuyên khoa
+  departments           Department[]   @relation("DoctorDepartments") // Nhiều bác sĩ ↔ nhiều chuyên khoa
   tokens                Token[]
-  sentMessages          Message[]       @relation("SentMessages")
-  receivedMessages      Message[]       @relation("ReceivedMessages")
+  sentMessages          Message[]      @relation("SentMessages")
+  receivedMessages      Message[]      @relation("ReceivedMessages")
 
   createdAt DateTime @default(now()) // Thời gian tạo
   updatedAt DateTime @updatedAt // Tự cập nhật khi thay đổi

@@ -6,10 +6,6 @@ import { en, Faker, vi } from '@faker-js/faker'
 export const seedUsers = async () => {
   console.log('👤 Seeding users...')
 
-  // Xóa dữ liệu cũ (chỉ nên làm khi dev)
-  await prisma.userRole.deleteMany()
-  await prisma.user.deleteMany()
-
   const faker = new Faker({
     locale: [vi, en]
   })

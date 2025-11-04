@@ -1,0 +1,15 @@
+// =========================
+// BẢNG HỌC VỊ / CHỨC DANH (ACADEMIC TITLE)
+// =========================
+model AcademicTitle {
+    id          Int      @id @default(autoincrement()) // Khóa chính
+    name        String   @unique @db.VarChar(255) // Tên học vị / chức danh (VD: "Giáo sư", "Tiến sĩ", "Thạc sĩ", "Bác sĩ chuyên khoa I")
+    description String?  @db.VarChar(1000) // Mô tả thêm (tùy chọn)
+    createdAt   DateTime @default(now()) // Ngày tạo
+    updatedAt   DateTime @updatedAt // Ngày cập nhật
+
+    // Quan hệ: 1 học vị có thể thuộc nhiều người
+    users User[]
+
+    @@map("academic_titles")
+}
