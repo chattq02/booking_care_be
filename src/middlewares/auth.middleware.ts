@@ -16,11 +16,11 @@ export function authMiddleware(roles: string[] = []) {
       const allowedRoles = JSON.parse(req.cookies.roles || '[]')
       const userActive = req.cookies.user_active
       if (!accessToken) {
-        return res.status(httpStatusCode.UNAUTHORIZED).json(
+        return res.status(httpStatusCode.NOT_FOUND).json(
           new ResultsReturned({
             isSuccess: true,
-            status: httpStatusCode.UNAUTHORIZED,
-            message: 'Vui lòng đăng nhập lại',
+            status: httpStatusCode.NOT_FOUND,
+            message: 'Access_token không tồn tại',
             data: null
           })
         )
@@ -31,11 +31,11 @@ export function authMiddleware(roles: string[] = []) {
       })
 
       if (!decoded) {
-        return res.status(httpStatusCode.UNAUTHORIZED).json(
+        return res.status(httpStatusCode.NOT_FOUND).json(
           new ResultsReturned({
             isSuccess: true,
-            status: httpStatusCode.UNAUTHORIZED,
-            message: 'Vui lòng đăng nhập lại',
+            status: httpStatusCode.NOT_FOUND,
+            message: 'Refresh_token không tồn tại',
             data: null
           })
         )

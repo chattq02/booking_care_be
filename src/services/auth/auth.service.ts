@@ -253,10 +253,10 @@ export class AuthService {
     const refreshToken = cookies.refresh_token
 
     if (!refreshToken) {
-      return res.status(httpStatusCode.UNAUTHORIZED).json(
+      return res.status(httpStatusCode.NOT_FOUND).json(
         new ResultsReturned({
           isSuccess: false,
-          status: httpStatusCode.UNAUTHORIZED,
+          status: httpStatusCode.NOT_FOUND,
           message: 'Refresh_token không tồn tại',
           data: null
         })
@@ -266,10 +266,10 @@ export class AuthService {
     const decoded = await this.decodeRefreshToken(refreshToken)
 
     if (!decoded) {
-      return res.status(httpStatusCode.UNAUTHORIZED).json(
+      return res.status(httpStatusCode.NOT_FOUND).json(
         new ResultsReturned({
           isSuccess: true,
-          status: httpStatusCode.UNAUTHORIZED,
+          status: httpStatusCode.NOT_FOUND,
           message: 'Vui lòng đăng nhập lại',
           data: null
         })
@@ -324,6 +324,21 @@ export class AuthService {
     res: Response
   ) => {
     const accessToken = cookies.access_token
+
+
+
+    if (!accessToken) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Access_Token không tồn tại',
+          data: null
+        })
+      )
+    }
+
+    console.log("accessToken", accessToken)
 
     const decoded_access = await this.decodeAccessToken(accessToken)
 
