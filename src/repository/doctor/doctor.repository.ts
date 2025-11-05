@@ -27,16 +27,20 @@ export class DoctorRepository {
     >[]
     total: number
   }> {
+    // Chuẩn hóa chuỗi để tránh lỗi khoảng trắng hoặc ký tự Unicode
+    const normalizeString = (str: string) => str.normalize('NFC').replace(/\s+/g, ' ').trim()
+
+    const normalizedKeyword = normalizeString(keyword || '')
     const where: Prisma.UserWhereInput = {
       user_type,
       AND: [
         keyword
           ? {
               OR: [
-                { fullName: { contains: keyword, mode: 'insensitive' } },
-                { email: { contains: keyword, mode: 'insensitive' } },
-                { phone: { contains: keyword, mode: 'insensitive' } },
-                { cccd: { contains: keyword, mode: 'insensitive' } }
+                { fullName: { contains: normalizedKeyword, mode: 'insensitive' } },
+                { email: { contains: normalizedKeyword, mode: 'insensitive' } },
+                { phone: { contains: normalizedKeyword, mode: 'insensitive' } },
+                { cccd: { contains: normalizedKeyword, mode: 'insensitive' } }
               ]
             }
           : {},
@@ -49,7 +53,7 @@ export class DoctorRepository {
         where,
         skip,
         take,
-        orderBy: { id: 'desc' },
+        orderBy: { createdAt: 'desc' },
         select: {
           id: true,
           uuid: true,

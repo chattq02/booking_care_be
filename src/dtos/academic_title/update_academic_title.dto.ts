@@ -1,7 +1,3 @@
-import { IsNotEmpty, IsString } from "class-validator";
+import { CreateAcademicTitleDto } from './create_academic_title.dto'
 
-export class UpdateAcademicTitleDto {
-    @IsNotEmpty({ message: 'Tên học vị không được để trống' })
-    @IsString({ message: 'Tên học vị phải là chuỗi' })
-    name!: string
-}
+export class UpdateAcademicTitleDto extends CreateAcademicTitleDto {}
