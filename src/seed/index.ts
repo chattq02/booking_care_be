@@ -12,7 +12,7 @@ async function main() {
   // await prisma.user.deleteMany()
   // await prisma.academicTitle.deleteMany()
   // await prisma.department.deleteMany()
-  await prisma.medicalFacility.deleteMany()
+  // await prisma.medicalFacility.deleteMany()
 
   await seedMedicalFacilities()
   await seedDepartment()
