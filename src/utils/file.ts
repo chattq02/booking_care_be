@@ -2,12 +2,15 @@ import { Request } from 'express'
 import formidable from 'formidable'
 import fs from 'fs'
 
-
+import { v2 as cloudinary } from 'cloudinary'
 import { Storage } from 'megajs'
 import { UPLOAD_TEMP_DIR } from '../constants/dir'
-import { cloudinaryMedia } from 'src/config/cloudinary.config'
 
-
+cloudinary.config({
+  cloud_name: 'dkqyptupf',
+  api_key: '923633263214567',
+  api_secret: '40OayrQ4yqNIhxXtmKTJ47yulNo'
+})
 export const getLoggedInStorage = () => {
   return new Storage({ email: 'baotuyet927@gmail.com', password: 'baotuyet927' }).ready
 }
@@ -20,7 +23,15 @@ export const initFolder = () => {
   }
 }
 
-export const handleFileUpload = async (req: Request) => {
+interface IFile {
+  created_at?: string
+  originalFilename?: string
+  format?: string
+  url?: string
+  bytes?: number
+}
+
+export const handleFileUpload = async (req: Request): Promise<IFile> => {
   const form = formidable({
     // uploadDir: UPLOAD_TEMP_DIR,
     maxFiles: 1,
@@ -38,14 +49,14 @@ export const handleFileUpload = async (req: Request) => {
         return reject(err)
       }
       if (files.file[0].mimetype.startsWith('image') || files.file[0].mimetype.startsWith('video')) {
-        const response = await cloudinaryMedia.uploader
+        const response = await cloudinary.uploader
           .upload(files.file[0].filepath, {
-            folder: 'ELeaning',
+            folder: 'BookingCare',
             use_filename: true,
             unique_filename: false,
             resource_type: 'auto'
           })
-          .catch((error: Error) => {
+          .catch((error) => {
             reject(error)
           })
         resolve({

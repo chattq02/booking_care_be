@@ -6,7 +6,7 @@ import { validateDto } from 'src/middlewares/validatorDTO.middleware'
 import { wrapRequestHandler } from 'src/utils/handlers'
 import { createRoleRouter } from 'src/utils/role-route'
 
-const { router: departmentRoutes, protectedRoute, publicRoute } = createRoleRouter('ADMIN')
+const { router: departmentRoutes, protectedRoute, publicRoute } = createRoleRouter()
 
 /**
  * @swagger
@@ -125,4 +125,22 @@ publicRoute.get('/department/tree', wrapRequestHandler(departmentController.getT
  */
 protectedRoute.delete('/department/:id', wrapRequestHandler(departmentController.delete))
 
+/**
+ * @swagger
+ * /v1/admin/department/{parentId}/children:
+ *   get:
+ *     summary: Lấy danh sách phòng ban con theo id cha
+ *     tags: [Department]
+ *     parameters:
+ *       - in: path
+ *         name: parentId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID của phòng ban cha
+ *     responses:
+ *       200:
+ *         description: Lấy thành công
+ */
+publicRoute.get('/department/:parentId/children', wrapRequestHandler(departmentController.getChildren))
 export default departmentRoutes

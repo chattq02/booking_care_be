@@ -58,14 +58,12 @@ export class DepartmentService {
     // 2️⃣ Nếu DTO có parentName, kiểm tra hoặc tạo parent
     if (dto.parentId) {
       await this.departmentRepo.create({
-        name: dto.name,
-        description: dto.description,
+        ...dto,
         parentId: dto.parentId
       })
     } else {
       await this.departmentRepo.create({
-        name: dto.name,
-        description: dto.description,
+        ...dto,
         parentId: undefined
       })
     }
@@ -89,6 +87,17 @@ export class DepartmentService {
           isSuccess: false,
           status: httpStatusCode.NOT_FOUND,
           message: 'Không tìm thấy khoa / phòng ban để cập nhật',
+          data: null
+        })
+      )
+    }
+
+    if (id === dto.parentId) {
+      return res.status(httpStatusCode.BAD_REQUEST).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'Không thể cập nhật khoa / phòng ban con bằng chính nó',
           data: null
         })
       )
@@ -169,6 +178,29 @@ export class DepartmentService {
         status: httpStatusCode.OK,
         message: 'Lấy cây chuyên khoa thành công',
         data: buildTree(null)
+      })
+    )
+  }
+
+  getChildren = async (parentId: number, res: Response) => {
+    const found = await this.departmentRepo.findById(parentId)
+    if (!found) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy khoa / phòng ban',
+          data: null
+        })
+      )
+    }
+    const children = await this.departmentRepo.findChildren(parentId)
+    return res.status(httpStatusCode.OK).json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Lấy chuyên khoa thành công',
+        data: children
       })
     )
   }

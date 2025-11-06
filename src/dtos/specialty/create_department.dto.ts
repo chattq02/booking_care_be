@@ -15,4 +15,8 @@ export class CreateDepartmentDto {
   @IsOptional()
   @IsString({ message: 'Ghi chú phải là chuỗi' })
   description?: string
+
+  @IsOptional()
+  @IsString({ message: 'Url phải là chuỗi' })
+  imageUrl?: string
 }

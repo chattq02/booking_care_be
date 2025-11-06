@@ -62,6 +62,7 @@ model User {
   academicTitleId      Int? // FK: Id của học vị / chức danh
 
   academicTitle         AcademicTitle? @relation(fields: [academicTitleId], references: [id], onDelete: Restrict)
+  facilities MedicalFacility[] @relation("FacilityDoctors")
   roles                 UserRole[]
   appointmentsAsDoctor  Appointment[]  @relation("DoctorAppointments") // Danh sách lịch khám mà user là bác sĩ
   appointmentsAsPatient Appointment[]  @relation("PatientAppointments") // Danh sách lịch khám mà user là bệnh nhân

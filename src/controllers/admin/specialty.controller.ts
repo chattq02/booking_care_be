@@ -31,6 +31,12 @@ class DepartmentController {
   getTree = async (_req: Request, res: Response) => {
     return this.departmentService.getTreeDepartment(res)
   }
+
+  // 🌿 Lấy danh sách phòng ban con theo parentId
+  getChildren = async (req: Request, res: Response) => {
+    const { parentId } = req.params
+    return this.departmentService.getChildren(Number(parentId), res)
+  }
 }
 
 export const departmentController = new DepartmentController()

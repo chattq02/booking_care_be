@@ -58,7 +58,8 @@ export class DepartmentRepository {
       data: {
         name: data.name.trim(),
         description: data.description,
-        parentId: data.parentId ?? undefined
+        parentId: data.parentId ?? undefined,
+        imageUrl: data.imageUrl ?? undefined
       }
     })
   }
@@ -70,7 +71,8 @@ export class DepartmentRepository {
       data: {
         name: data.name.trim(),
         description: data.description,
-        parentId: data.parentId ?? null
+        parentId: data.parentId ?? undefined,
+        imageUrl: data.imageUrl ?? ''
       }
     })
   }
@@ -90,6 +92,13 @@ export class DepartmentRepository {
           }
         }
       }
+    })
+  }
+
+  findChildren(parentId: number) {
+    return prisma.department.findMany({
+      where: { parentId },
+      orderBy: { createdAt: 'desc' }
     })
   }
 }
