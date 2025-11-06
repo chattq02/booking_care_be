@@ -15,7 +15,7 @@ export class MedicalFacilityService {
     const { page = 1, per_page = 10, keyword = '' } = query
     const skip = (page - 1) * per_page
 
-    const { data, total } = await this.medicalFacilityRepo.findMany(keyword, skip, per_page)
+    const { data, total } = await this.medicalFacilityRepo.findMany(keyword, Number(skip), Number(per_page))
 
     const baseUrl = `${process.env.API_BASE_URL}/v1/medical-facility/get-list`
 

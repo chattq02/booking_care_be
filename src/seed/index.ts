@@ -15,7 +15,7 @@ async function main() {
   await prisma.medicalFacility.deleteMany()
 
   await seedMedicalFacilities()
-  // await seedDepartment()
+  await seedDepartment()
   // await seedAcademicTitle()
   // await seedUsers()
 

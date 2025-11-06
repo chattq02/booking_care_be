@@ -128,7 +128,7 @@ publicRoute.get('/medical-facility/:id', wrapRequestHandler(medicalFacilityContr
  *       200:
  *         description: Xóa thành công
  *       400:
- *         description: Không thể xóa (ví dụ: có phòng ban hoặc bác sĩ liên kết)
+ *         description: Không thể xóa  phòng ban hoặc bác sĩ liên kết
  */
 protectedRoute.delete('/medical-facility/:id', wrapRequestHandler(medicalFacilityController.delete))
 
