@@ -1,3 +1,4 @@
+import { MedicalFacilityStatus } from '@prisma/client'
 import { prisma } from 'src/config/database.config'
 import { CreateMedicalFacilityDto } from 'src/dtos/medical_facility/create.dto'
 import { UpdateMedicalFacilityDto } from 'src/dtos/medical_facility/update.dto'
@@ -11,22 +12,30 @@ export class MedicalFacilityRepository {
   }
 
   // 🟢 Lấy danh sách có phân trang + tìm kiếm
-  async findMany(keyword: string, skip: number, take: number) {
+  async findMany(keyword: string, skip: number, take: number, isActive: MedicalFacilityStatus | 'All') {
     const processedKeyword =
       keyword
         ?.normalize('NFC')
         .replace(/[%_\\]/g, '\\$&') // Escape ký tự đặc biệt SQL LIKE
         .trim() || ''
 
-    const where = processedKeyword
-      ? {
-          OR: [
-            { name: { contains: processedKeyword, mode: 'insensitive' as const } },
-            { address: { contains: processedKeyword, mode: 'insensitive' as const } },
-            { description: { contains: processedKeyword, mode: 'insensitive' as const } }
-          ]
-        }
-      : {}
+    const where = {
+      AND: [
+        processedKeyword
+          ? {
+              OR: [
+                { name: { contains: processedKeyword, mode: 'insensitive' as const } },
+                { address: { contains: processedKeyword, mode: 'insensitive' as const } },
+                { description: { contains: processedKeyword, mode: 'insensitive' as const } },
+                { code: { contains: processedKeyword, mode: 'insensitive' as const } },
+                { email: { contains: processedKeyword, mode: 'insensitive' as const } },
+                { phone: { contains: processedKeyword, mode: 'insensitive' as const } }
+              ]
+            }
+          : {},
+        isActive && isActive !== 'All' ? { isActive: { equals: isActive } } : {}
+      ]
+    }
 
     const [data, total] = await Promise.all([
       prisma.medicalFacility.findMany({
@@ -88,5 +97,58 @@ export class MedicalFacilityRepository {
     return prisma.department.count({
       where: { facilityId: id }
     })
+  }
+
+  // 👨‍⚕️ Lấy danh sách user (bác sĩ) thuộc 1 cơ sở y tế (có phân trang + tìm kiếm)
+  async findUsersByFacility(facilityId: number, keyword: string, skip: number, take: number) {
+    const processedKeyword =
+      keyword
+        ?.normalize('NFC')
+        .replace(/[%_\\]/g, '\\$&')
+        .trim() || ''
+
+    const where = {
+      AND: [
+        {
+          facilities: {
+            some: { id: facilityId }
+          }
+        },
+        processedKeyword
+          ? {
+              fullName: {
+                contains: processedKeyword,
+                mode: 'insensitive' as const
+              }
+            }
+          : {}
+      ]
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { fullName: 'asc' },
+        select: {
+          id: true,
+          uuid: true,
+          fullName: true,
+          email: true,
+          phone: true,
+          gender: true,
+          user_type: true,
+          avatar: true,
+          experience: true,
+          academicTitle: { select: { name: true } },
+          departments: { select: { id: true, name: true } }
+        }
+      }),
+
+      prisma.user.count({ where })
+    ])
+
+    return { data, total }
   }
 }

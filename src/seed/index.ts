@@ -8,16 +8,16 @@ import { seedUsers } from './users.seed'
 
 async function main() {
   console.log('🌱 Bắt đầu seed dữ liệu...')
-  // await prisma.userRole.deleteMany()
-  // await prisma.user.deleteMany()
-  // await prisma.academicTitle.deleteMany()
-  // await prisma.department.deleteMany()
-  // await prisma.medicalFacility.deleteMany()
+  await prisma.userRole.deleteMany()
+  await prisma.user.deleteMany()
+  await prisma.academicTitle.deleteMany()
+  await prisma.department.deleteMany()
+  await prisma.medicalFacility.deleteMany()
 
   await seedMedicalFacilities()
   await seedDepartment()
-  // await seedAcademicTitle()
-  // await seedUsers()
+  await seedAcademicTitle()
+  await seedUsers()
 
   console.log('✅ Hoàn tất seed toàn bộ dữ liệu!')
 }

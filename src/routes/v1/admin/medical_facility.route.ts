@@ -80,6 +80,14 @@ protectedRoute.put(
  *         name: keyword
  *         schema:
  *           type: string
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [Active, InActive]
+ *           example: All
+ *         required: false
+ *         description: Lọc theo trạng thái
  *     responses:
  *       200:
  *         description: Thành công
@@ -131,5 +139,39 @@ publicRoute.get('/medical-facility/:id', wrapRequestHandler(medicalFacilityContr
  *         description: Không thể xóa  phòng ban hoặc bác sĩ liên kết
  */
 protectedRoute.delete('/medical-facility/:id', wrapRequestHandler(medicalFacilityController.delete))
+
+// 👨‍⚕️ Lấy danh sách user (bác sĩ) theo cơ sở y tế
+/**
+ * @swagger
+ * /v1/admin/medical-facility/{id}/users:
+ *   get:
+ *     summary: Lấy danh sách user (bác sĩ, nhân viên) thuộc cơ sở y tế
+ *     tags: [MedicalFacility]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: pagegetListDoctors
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: per_page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: keyword
+ *         schema:
+ *           type: string
+ *           example: "Nguyen Van A"
+ *     responses:
+ *       200:
+ *         description: Lấy danh sách user thành công
+ */
+publicRoute.get('/medical-facility/:id/users', wrapRequestHandler(medicalFacilityController.getUsersByFacility))
 
 export default medicalFacilityRouter

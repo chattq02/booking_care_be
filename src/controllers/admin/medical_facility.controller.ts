@@ -32,6 +32,12 @@ class MedicalFacilityController {
     const { id } = req.params
     return this.medicalFacilityService.getDetail(Number(id), res)
   }
+
+  // 👨‍⚕️ Lấy danh sách user (bác sĩ) theo id cơ sở y tế
+  getUsersByFacility = async (req: Request, res: Response) => {
+    const { id } = req.params
+    return this.medicalFacilityService.getUsersByFacility(Number(id), res)
+  }
 }
 
 export const medicalFacilityController = new MedicalFacilityController()

@@ -4,6 +4,6 @@ import { MedicalFacilityStatus } from '@prisma/client'
 
 export class GetListQueryDto extends PaginationQueryDto {
   @IsOptional()
-  @IsIn(['Active', 'InActive'])
+  @IsIn(['All', 'Active', 'InActive'])
   status?: MedicalFacilityStatus
 }

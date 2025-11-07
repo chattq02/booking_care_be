@@ -12,10 +12,10 @@ export class MedicalFacilityService {
 
   // 📋 Lấy danh sách cơ sở y tế (phân trang + tìm kiếm)
   getList = async (query: GetListQueryDto, res: Response) => {
-    const { page = 1, per_page = 10, keyword = '' } = query
+    const { page = 1, per_page = 10, keyword = '', status = 'All' } = query
     const skip = (page - 1) * per_page
 
-    const { data, total } = await this.medicalFacilityRepo.findMany(keyword, Number(skip), Number(per_page))
+    const { data, total } = await this.medicalFacilityRepo.findMany(keyword, Number(skip), Number(per_page), status)
 
     const baseUrl = `${process.env.API_BASE_URL}/v1/medical-facility/get-list`
 
@@ -151,6 +151,61 @@ export class MedicalFacilityService {
         status: httpStatusCode.OK,
         message: 'Lấy chi tiết cơ sở y tế thành công',
         data: found
+      })
+    )
+  }
+
+  // 👨‍⚕️ Lấy danh sách user (bác sĩ) thuộc 1 cơ sở y tế (có phân trang + tìm kiếm)
+  getUsersByFacility = async (id: number, res: Response) => {
+    const found = await this.medicalFacilityRepo.findById(id)
+
+    if (!found) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy cơ sở y tế',
+          data: null
+        })
+      )
+    }
+
+    // 👉 Lấy query params từ request
+    const {
+      page = 1,
+      per_page = 10,
+      keyword = ''
+    } = res.req.query as {
+      page?: string
+      per_page?: string
+      keyword?: string
+    }
+
+    const skip = (Number(page) - 1) * Number(per_page)
+
+    const { data, total } = await this.medicalFacilityRepo.findUsersByFacility(id, keyword, skip, Number(per_page))
+
+    const baseUrl = `${process.env.API_BASE_URL}/v1/medical-facility/${id}/users`
+
+    const next_page_url =
+      skip + Number(per_page) < total ? `${baseUrl}?page=${Number(page) + 1}&per_page=${per_page}` : null
+    const prev_page_url = Number(page) > 1 ? `${baseUrl}?page=${Number(page) - 1}&per_page=${per_page}` : null
+
+    return res.status(httpStatusCode.OK).json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Lấy danh sách người dùng trong cơ sở y tế thành công',
+        data: {
+          current_page: Number(page),
+          data,
+          next_page_url,
+          path: baseUrl,
+          per_page: Number(per_page),
+          prev_page_url,
+          to: Math.min(skip + Number(per_page), total),
+          total
+        }
       })
     )
   }
