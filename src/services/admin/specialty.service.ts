@@ -1,14 +1,19 @@
 import { Response } from 'express'
 import { httpStatusCode } from 'src/constants/httpStatus'
 import { CreateDepartmentDto } from 'src/dtos/specialty/create_department.dto'
+import { DeleteDepartmentDto } from 'src/dtos/specialty/delete_department.dto'
 import { GetListDepartmentQueryDto } from 'src/dtos/specialty/get-list_department.dto'
+import { GetTreeDepartmentByFacilityDto } from 'src/dtos/specialty/get-tree-department.dto'
 import { UpdateDepartmentDto } from 'src/dtos/specialty/update_department.dto'
+import { MedicalFacilityRepository } from 'src/repository/admin/medical_facility.repo'
 import { DepartmentRepository } from 'src/repository/admin/specialty.repo'
 
 import { ResultsReturned } from 'src/utils/results-api'
 
 export class DepartmentService {
   private departmentRepo = new DepartmentRepository()
+
+  private medicalFacilityRepo = new MedicalFacilityRepository()
 
   // 🟢 Lấy danh sách
   getListDepartment = async (query: GetListDepartmentQueryDto, res: Response) => {
@@ -43,6 +48,17 @@ export class DepartmentService {
 
   // 🟢 Tạo mới
   create = async (dto: CreateDepartmentDto, res: Response) => {
+    const found = await this.medicalFacilityRepo.findById(Number(dto.facilityId))
+    if (!found) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy cơ sở y tế ',
+          data: null
+        })
+      )
+    }
     // 1️⃣ Kiểm tra tên department con đã tồn tại chưa
     const exists = await this.departmentRepo.findByName(dto.name)
     if (exists) {
@@ -80,6 +96,17 @@ export class DepartmentService {
 
   // 🟡 Cập nhật
   update = async (id: number, dto: UpdateDepartmentDto, res: Response) => {
+    const isFacilityId = await this.medicalFacilityRepo.findById(Number(dto.facilityId))
+    if (!isFacilityId) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy cơ sở y tế ',
+          data: null
+        })
+      )
+    }
     const found = await this.departmentRepo.findById(id)
     if (!found) {
       return res.status(httpStatusCode.NOT_FOUND).json(
@@ -115,7 +142,18 @@ export class DepartmentService {
   }
 
   // 🔴 Xóa
-  delete = async (id: number, res: Response) => {
+  delete = async (id: number, facilityId: number, res: Response) => {
+    const isFacilityId = await this.medicalFacilityRepo.findById(Number(facilityId))
+    if (!isFacilityId) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy cơ sở y tế ',
+          data: null
+        })
+      )
+    }
     const found = await this.departmentRepo.findById(id)
     if (!found) {
       return res.status(httpStatusCode.NOT_FOUND).json(
@@ -139,8 +177,7 @@ export class DepartmentService {
         })
       )
     }
-
-    await this.departmentRepo.delete(id)
+    await this.departmentRepo.delete(id, facilityId)
     return res.status(httpStatusCode.OK).json(
       new ResultsReturned({
         isSuccess: true,
@@ -152,8 +189,21 @@ export class DepartmentService {
   }
 
   // // 🌳 Lấy cây chuyên khoa cha – con (đệ quy)
-  getTreeDepartment = async (res: Response) => {
-    const departments = await this.departmentRepo.findAll()
+  getTreeDepartment = async (dto: GetTreeDepartmentByFacilityDto, res: Response) => {
+    const found = await this.medicalFacilityRepo.findById(Number(dto.facilityId))
+    if (!found) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy cơ sở y tế',
+          data: null
+        })
+      )
+    }
+
+    // Lấy department theo facility
+    const departments = await this.departmentRepo.findAllByFacilityId(Number(dto.facilityId))
 
     // nhóm theo parentId
     const map = new Map<number | null, any[]>()
@@ -176,7 +226,7 @@ export class DepartmentService {
       new ResultsReturned({
         isSuccess: true,
         status: httpStatusCode.OK,
-        message: 'Lấy cây chuyên khoa thành công',
+        message: 'Lấy chuyên khoa thành công',
         data: buildTree(null)
       })
     )

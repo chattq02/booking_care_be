@@ -29,9 +29,15 @@ const { router: departmentRoutes, protectedRoute, publicRoute } = createRoleRout
  *               description:
  *                 type: string
  *                 example: Chuyên phẫu thuật
+ *               facilityId:
+ *                 type: integer
+ *                 example: 1
  *               parentId:
  *                 type: integer
  *                 example: 1
+ *               imageUrl:
+ *                 type: string
+ *                 example: https://example.com/image.jpg
  *     responses:
  *       201:
  *         description: Tạo thành công
@@ -58,6 +64,22 @@ protectedRoute.post('/department', validateDto(CreateDepartmentDto), wrapRequest
  *         application/json:
  *           schema:
  *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: Khoa Ngoại
+ *               description:
+ *                 type: string
+ *                 example: Chuyên phẫu thuật
+ *               facilityId:
+ *                 type: integer
+ *                 example: 1
+ *               parentId:
+ *                 type: integer
+ *                 example: 1
+ *               imageUrl:
+ *                 type: string
+ *                 example: https://example.com/image.jpg
  *     responses:
  *       200:
  *         description: Cập nhật thành công
@@ -97,6 +119,12 @@ publicRoute.get('/department', validateDto(GetListDepartmentQueryDto), wrapReque
  *   get:
  *     summary: Lấy danh sách phòng ban dạng cây
  *     tags: [Department]
+ *     parameters:
+ *       - in: query
+ *         name: facilityId
+ *         schema:
+ *           type: integer
+ *           default: 1
  *     responses:
  *       200:
  *         description: Lấy thành công
@@ -117,13 +145,19 @@ publicRoute.get('/department/tree', wrapRequestHandler(departmentController.getT
  *         required: true
  *         schema:
  *           type: integer
+ *       - in: query
+ *         name: facilityId
+ *         schema:
+ *           type: integer
+ *           example: 100
+ *         description: Id của cơ sở y tế
  *     responses:
  *       200:
  *         description: Xóa thành công
  *       400:
  *         description: Không thể xóa vì có bác sĩ thuộc khoa này
  */
-protectedRoute.delete('/department/:id', wrapRequestHandler(departmentController.delete))
+protectedRoute.delete('/department/:id/:facilityId', wrapRequestHandler(departmentController.delete))
 
 /**
  * @swagger

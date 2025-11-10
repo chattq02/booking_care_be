@@ -6,16 +6,25 @@ import { faker } from '@faker-js/faker/locale/vi'
 export const seedUsers = async () => {
   console.log('👤 Seeding users...')
 
-  // Lấy danh sách medical facilities từ database
   const facilities = await prisma.medicalFacility.findMany()
-  console.log(`🏥 Found ${facilities.length} medical facilities`)
+  const departments = await prisma.department.findMany()
+  const academicTitles = await prisma.academicTitle.findMany()
 
   if (facilities.length === 0) {
     console.log('❌ No medical facilities found. Please seed medical facilities first.')
     return
   }
 
-  // 4 user cố định
+  if (departments.length === 0) {
+    console.log('❌ No departments found. Please seed departments first.')
+    return
+  }
+
+  if (academicTitles.length === 0) {
+    console.log('❌ No academic titles found. Please seed academic titles first.')
+    return
+  }
+
   const baseUsers = [
     {
       fullName: 'Admin Chính',
@@ -27,7 +36,9 @@ export const seedUsers = async () => {
       is_verify: IsVerify.YES,
       user_status: UserStatus.Active,
       user_type: UserType.Admin,
-      facilityIds: [facilities[0]?.id, facilities[1]?.id].filter(Boolean)
+      facilityIds: facilities[0]?.id,
+      departmentIds: [departments[0]?.id].filter(Boolean),
+      academicTitleId: academicTitles[0]?.id
     },
     {
       fullName: 'Bác sĩ A',
@@ -39,9 +50,11 @@ export const seedUsers = async () => {
       is_verify: IsVerify.YES,
       user_status: UserStatus.Active,
       user_type: UserType.Doctor,
-      facilityIds: [facilities[0]?.id].filter(Boolean),
       experience: 10,
-      description: 'Bác sĩ chuyên khoa Tim mạch với 10 năm kinh nghiệm'
+      description: 'Bác sĩ chuyên khoa Tim mạch với 10 năm kinh nghiệm',
+      facilityIds: facilities[0]?.id,
+      departmentIds: [departments[0]?.id].filter(Boolean),
+      academicTitleId: academicTitles[0]?.id
     },
     {
       fullName: 'Người dùng B',
@@ -53,7 +66,9 @@ export const seedUsers = async () => {
       is_verify: IsVerify.YES,
       user_status: UserStatus.Active,
       user_type: UserType.Patient,
-      facilityIds: [] // Patient không cần thuộc facility
+      facilityIds: facilities[0]?.id,
+      departmentIds: [departments[0]?.id].filter(Boolean),
+      academicTitleId: academicTitles[0]?.id
     },
     {
       fullName: 'Bác sĩ kiêm Admin',
@@ -65,24 +80,24 @@ export const seedUsers = async () => {
       is_verify: IsVerify.YES,
       user_status: UserStatus.Active,
       user_type: UserType.Doctor,
-      facilityIds: [facilities[1]?.id].filter(Boolean),
       experience: 8,
-      description: 'Bác sĩ chuyên khoa Thần kinh với 8 năm kinh nghiệm'
+      description: 'Bác sĩ chuyên khoa Thần kinh với 8 năm kinh nghiệm',
+      facilityIds: facilities[0]?.id,
+      departmentIds: [departments[0]?.id].filter(Boolean),
+      academicTitleId: academicTitles[0]?.id
     }
   ]
 
-  // ➕ Tạo 1000 user giả
   const fakeUsers = Array.from({ length: 1000 }).map((_, i) => {
-    const isDoctor = faker.datatype.boolean(0.3) // 30% là bác sĩ
-    const isAdmin = faker.datatype.boolean(0.1) && !isDoctor // 10% là admin (không phải bác sĩ)
-    const isPatient = !isDoctor && !isAdmin // Còn lại là patient
+    const isDoctor = faker.datatype.boolean(0.3)
+    const isAdmin = faker.datatype.boolean(0.1) && !isDoctor
+    const isPatient = !isDoctor && !isAdmin
 
     const roles = []
     if (isDoctor) roles.push({ role: Role.DOCTOR })
     if (isAdmin) roles.push({ role: Role.ADMIN })
     if (isPatient) roles.push({ role: Role.USER })
 
-    // Chỉ bác sĩ và admin mới cần thuộc facility
     const facilityIds =
       (isDoctor || isAdmin) && facilities.length > 0
         ? [facilities[faker.number.int({ min: 0, max: facilities.length - 1 })]?.id].filter(Boolean)
@@ -109,74 +124,55 @@ export const seedUsers = async () => {
       address: `${faker.location.streetAddress()}, ${faker.location.city()}`
     }
 
-    // Thêm thông tin chuyên môn cho bác sĩ
     if (isDoctor) {
       userData.experience = faker.number.int({ min: 1, max: 30 })
-      userData.description = `Bác sĩ chuyên khoa ${userData.specialty} với ${userData.experience} năm kinh nghiệm`
-      userData.practice_certificate = `CC-${faker.string.alphanumeric(8).toUpperCase()}`
+      userData.description = `Bác sĩ chuyên khoa với ${userData.experience} năm kinh nghiệm`
+      userData.academicTitleId = faker.helpers.arrayElement(academicTitles).id
+      // Gán 1-3 department ngẫu nhiên
+      const doctorDepartments = faker.helpers.arrayElements(
+        departments.filter((d) => !d.parentId),
+        { min: 1, max: 3 }
+      )
+      userData.departmentIds = doctorDepartments.map((d) => d.id)
     }
 
     return userData
   })
 
   const allUsers = [...baseUsers, ...fakeUsers]
-  console.log(`📦 Total users to insert: ${allUsers.length}`)
 
-  // ⚙️ Chia batch 200 user 1 lần để seed nhanh
   const batchSize = 200
-  let totalInserted = 0
-
   for (let i = 0; i < allUsers.length; i += batchSize) {
     const batch = allUsers.slice(i, i + batchSize)
-
     await Promise.all(
       batch.map(async (u) => {
-        try {
-          // Tách facilityIds ra khỏi dữ liệu user chính
-          const { facilityIds, roles, ...userData } = u
-
-          const user = await prisma.user.upsert({
-            where: { email: u.email },
-            update: {},
-            create: {
-              ...userData,
-              roles: { create: roles }
-            }
-          })
-
-          // Thêm user vào medical facilities nếu có
-          if (facilityIds && facilityIds.length > 0) {
-            await prisma.user.update({
-              where: { id: user.id },
-              data: {
-                facilities: {
-                  connect: facilityIds.map((id: number) => ({ id }))
-                }
-              }
-            })
+        const { facilityIds, roles, departmentIds, ...userData } = u
+        const user = await prisma.user.upsert({
+          where: { email: u.email },
+          update: {},
+          create: {
+            ...userData,
+            roles: { create: roles }
           }
+        })
 
-          return user
-        } catch (error) {
-          console.error(`❌ Error creating user ${u.email}:`, error)
-          return null
+        if (facilityIds?.length) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { facilities: { connect: facilityIds.map((id: number) => ({ id })) } }
+          })
+        }
+
+        if (departmentIds?.length) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { departments: { connect: departmentIds.map((id: number) => ({ id })) } }
+          })
         }
       })
     )
-
-    totalInserted += batch.length
-    console.log(`✅ Inserted ${Math.min(totalInserted, allUsers.length)} users`)
+    console.log(`✅ Inserted users: ${Math.min(i + batch.length, allUsers.length)}`)
   }
 
-  // Thống kê
-  const doctorCount = allUsers.filter((u) => u.user_type === UserType.Doctor).length
-  const adminCount = allUsers.filter((u) => u.user_type === UserType.Admin).length
-  const patientCount = allUsers.filter((u) => u.user_type === UserType.Patient).length
-
-  console.log('🎉 Done seeding users with medical facilities')
-  console.log(`📊 Statistics:
-    - Doctors: ${doctorCount}
-    - Admins: ${adminCount} 
-    - Patients: ${patientCount}
-    - Total: ${allUsers.length}`)
+  console.log('🎉 Done seeding users with academic titles, departments, and medical facilities')
 }

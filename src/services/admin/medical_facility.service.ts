@@ -13,14 +13,15 @@ export class MedicalFacilityService {
   // 📋 Lấy danh sách cơ sở y tế (phân trang + tìm kiếm)
   getList = async (query: GetListQueryDto, res: Response) => {
     const { page = 1, per_page = 10, keyword = '', status = 'All' } = query
-    const skip = (page - 1) * per_page
+    const skip = (Number(page) - 1) * Number(per_page)
 
     const { data, total } = await this.medicalFacilityRepo.findMany(keyword, Number(skip), Number(per_page), status)
 
     const baseUrl = `${process.env.API_BASE_URL}/v1/medical-facility/get-list`
 
-    const next_page_url = skip + per_page < total ? `${baseUrl}?page=${page + 1}&per_page=${per_page}` : null
-    const prev_page_url = page > 1 ? `${baseUrl}?page=${page - 1}&per_page=${per_page}` : null
+    const next_page_url =
+      Number(skip) + Number(per_page) < total ? `${baseUrl}?page=${Number(page) + 1}&per_page=${per_page}` : null
+    const prev_page_url = Number(page) > 1 ? `${baseUrl}?page=${Number(page) - 1}&per_page=${per_page}` : null
 
     return res.status(httpStatusCode.OK).json(
       new ResultsReturned({
@@ -28,13 +29,13 @@ export class MedicalFacilityService {
         status: httpStatusCode.OK,
         message: 'Lấy danh sách cơ sở y tế thành công',
         data: {
-          current_page: page,
+          current_page: Number(page),
           data,
           next_page_url,
           path: baseUrl,
           per_page,
           prev_page_url,
-          to: Math.min(skip + per_page, total),
+          to: Math.min(skip + Number(per_page), total),
           total
         }
       })

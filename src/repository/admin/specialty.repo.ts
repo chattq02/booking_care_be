@@ -59,7 +59,8 @@ export class DepartmentRepository {
         name: data.name.trim(),
         description: data.description,
         parentId: data.parentId ?? undefined,
-        imageUrl: data.imageUrl ?? undefined
+        imageUrl: data.imageUrl ?? undefined,
+        facilityId: data.facilityId
       }
     })
   }
@@ -67,7 +68,7 @@ export class DepartmentRepository {
   // 🟡 Cập nhật
   update(id: number, data: UpdateDepartmentDto) {
     return prisma.department.update({
-      where: { id },
+      where: { id, facilityId: data.facilityId },
       data: {
         name: data.name.trim(),
         description: data.description,
@@ -78,8 +79,8 @@ export class DepartmentRepository {
   }
 
   // 🔴 Xóa
-  delete(id: number) {
-    return prisma.department.delete({ where: { id } })
+  delete(id: number, facilityId: number) {
+    return prisma.department.delete({ where: { id, facilityId } })
   }
 
   // 🧩 Đếm số user trong khoa (để chặn xóa)
@@ -99,6 +100,15 @@ export class DepartmentRepository {
     return prisma.department.findMany({
       where: { parentId },
       orderBy: { createdAt: 'desc' }
+    })
+  }
+
+  findAllByFacilityId = async (facilityId: number) => {
+    return prisma.department.findMany({
+      where: {
+        facilityId: facilityId
+      },
+      orderBy: { id: 'asc' } // tuỳ chọn
     })
   }
 }

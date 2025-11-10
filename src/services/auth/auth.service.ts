@@ -312,9 +312,9 @@ export class AuthService {
     )
   }
 
-  forgotPassword = async (dto: TokenDto, res: Response) => { }
+  forgotPassword = async (dto: TokenDto, res: Response) => {}
 
-  resetPassword = async (dto: EmailDto, res: Response) => { }
+  resetPassword = async (dto: EmailDto, res: Response) => {}
 
   getMe = async (
     cookies: {
@@ -324,8 +324,6 @@ export class AuthService {
     res: Response
   ) => {
     const accessToken = cookies.access_token
-
-
 
     if (!accessToken) {
       return res.status(httpStatusCode.NOT_FOUND).json(
@@ -337,8 +335,6 @@ export class AuthService {
         })
       )
     }
-
-    console.log("accessToken", accessToken)
 
     const decoded_access = await this.decodeAccessToken(accessToken)
 

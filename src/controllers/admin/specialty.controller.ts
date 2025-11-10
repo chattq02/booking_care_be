@@ -1,5 +1,7 @@
 import { Request, Response } from 'express'
+import { DeleteDepartmentDto } from 'src/dtos/specialty/delete_department.dto'
 import { GetListDepartmentQueryDto } from 'src/dtos/specialty/get-list_department.dto'
+import { GetTreeDepartmentByFacilityDto } from 'src/dtos/specialty/get-tree-department.dto'
 import { DepartmentService } from 'src/services/admin/specialty.service'
 
 class DepartmentController {
@@ -18,8 +20,8 @@ class DepartmentController {
 
   // 🔴 Xóa chuyên khoa
   delete = async (req: Request, res: Response) => {
-    const { id } = req.params
-    return this.departmentService.delete(Number(id), res)
+    const { id, facilityId } = req.params
+    return this.departmentService.delete(Number(id), Number(facilityId), res)
   }
 
   // 📋 Lấy danh sách chuyên khoa
@@ -28,8 +30,8 @@ class DepartmentController {
   }
 
   // 🌳 Lấy cây chuyên khoa
-  getTree = async (_req: Request, res: Response) => {
-    return this.departmentService.getTreeDepartment(res)
+  getTree = async (req: Request, res: Response) => {
+    return this.departmentService.getTreeDepartment(req.query as unknown as GetTreeDepartmentByFacilityDto, res)
   }
 
   // 🌿 Lấy danh sách phòng ban con theo parentId

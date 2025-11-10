@@ -2,15 +2,23 @@
 // BẢNG CA KHÁM / LỊCH LÀM VIỆC (SCHEDULE)
 // =========================
 model Schedule {
-  id          Int      @id @default(autoincrement()) // Khóa chính
-  doctorId    Int // FK: Bác sĩ phụ trách
-  date        DateTime // Ngày khám
-  startTime   DateTime // Giờ bắt đầu
-  endTime     DateTime // Giờ kết thúc
-  isAvailable Boolean  @default(true) // Còn trống hay không
+  id           Int       @id @default(autoincrement()) // Khóa chính
+  doctorId     Int? // FK: Bác sĩ phụ trách
+  facilityId   Int? // FK: Cơ sở y tế
+  departmentId Int? // FK: Khoa/phòng
+  date         DateTime? // Ngày làm việc cụ thể (null nếu là lịch tuần định kỳ)
+  slots        Json // Mảng các ca giờ [{dayOfWeek, startTime, endTime, price}]
 
-  doctor       User          @relation(fields: [doctorId], references: [id], onDelete: Cascade) // Liên kết tới bác sĩ
+  // Quan hệ
+  doctor       User?            @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  facility     MedicalFacility? @relation(fields: [facilityId], references: [id], onDelete: Cascade, name: "FacilitySchedules")
+  department   Department?      @relation(fields: [departmentId], references: [id], onDelete: Cascade, name: "DepartmentSchedules")
   appointments Appointment[] // Danh sách các lịch khám trong ca này
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([doctorId, date])
+  @@index([facilityId, departmentId])
   @@map("schedules")
 }

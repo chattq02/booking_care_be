@@ -61,16 +61,16 @@ model User {
   created_by           Int? // Người tạo
   academicTitleId      Int? // FK: Id của học vị / chức danh
 
-  academicTitle         AcademicTitle? @relation(fields: [academicTitleId], references: [id], onDelete: Restrict)
-  facilities MedicalFacility[] @relation("FacilityDoctors")
+  academicTitle         AcademicTitle?    @relation(fields: [academicTitleId], references: [id], onDelete: Restrict)
+  facilities            MedicalFacility[] @relation("FacilityDoctors")
   roles                 UserRole[]
-  appointmentsAsDoctor  Appointment[]  @relation("DoctorAppointments") // Danh sách lịch khám mà user là bác sĩ
-  appointmentsAsPatient Appointment[]  @relation("PatientAppointments") // Danh sách lịch khám mà user là bệnh nhân
+  appointmentsAsDoctor  Appointment[]     @relation("DoctorAppointments") // Danh sách lịch khám mà user là bác sĩ
+  appointmentsAsPatient Appointment[]     @relation("PatientAppointments") // Danh sách lịch khám mà user là bệnh nhân
   schedules             Schedule[] // Các ca làm việc của bác sĩ
-  departments           Department[]   @relation("DoctorDepartments") // Nhiều bác sĩ ↔ nhiều chuyên khoa
+  departments           Department[]      @relation("DoctorDepartments") // Nhiều bác sĩ ↔ nhiều chuyên khoa
   tokens                Token[]
-  sentMessages          Message[]      @relation("SentMessages")
-  receivedMessages      Message[]      @relation("ReceivedMessages")
+  sentMessages          Message[]         @relation("SentMessages")
+  receivedMessages      Message[]         @relation("ReceivedMessages")
 
   createdAt DateTime @default(now()) // Thời gian tạo
   updatedAt DateTime @updatedAt // Tự cập nhật khi thay đổi
