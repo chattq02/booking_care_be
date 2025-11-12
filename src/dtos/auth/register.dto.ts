@@ -1,6 +1,11 @@
 import { UserRole } from '@prisma/client'
-import { IsEmail, IsNotEmpty, MinLength, IsIn, Matches } from 'class-validator'
+import { Type } from 'class-transformer';
+import { IsEmail, IsNotEmpty, MinLength, IsIn, Matches, ValidateNested } from 'class-validator'
 
+export class RoleDto {
+  @IsIn(['ADMIN', 'DOCTOR', 'USER'])
+  role!: string;
+}
 export class RegisterDto {
   @IsNotEmpty({
     message: 'Name is required'
@@ -17,6 +22,7 @@ export class RegisterDto {
   })
   password!: string
 
-  @IsIn(['ADMIN', 'DOCTOR', 'USER'])
-  roles!: UserRole[]
+  @ValidateNested({ each: true })
+  @Type(() => RoleDto)
+  roles!: RoleDto[];
 }

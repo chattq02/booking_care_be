@@ -214,6 +214,7 @@ export class ScheduleService {
 
   // Cập nhật lịch
   updateSchedule = async (id: number, dto: UpdateScheduleDto, res: Response) => {
+    console.log("dto",dto)
     const found = await this.scheduleRepo.findById(id)
     if (!found)
       return res.status(httpStatusCode.NOT_FOUND).json(
@@ -225,13 +226,14 @@ export class ScheduleService {
         })
       )
 
-    const updated = await this.scheduleRepo.update(id, dto)
+    await this.scheduleRepo.update(id, dto)
+    
     return res.status(httpStatusCode.OK).json(
       new ResultsReturned({
         isSuccess: true,
         status: httpStatusCode.OK,
         message: 'Cập nhật lịch thành công',
-        data: updated
+        data: null
       })
     )
   }

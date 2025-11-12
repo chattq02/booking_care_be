@@ -1,4 +1,4 @@
-import { Role, Token, TokenType, User } from '@prisma/client'
+import { Prisma, Role, Token, TokenType, User } from '@prisma/client'
 import { prisma } from 'src/config/database.config'
 import { YES_NO_FLAG_VALUE, YesNoFlagKey } from 'src/constants/enums'
 import { UserStatus } from 'src/constants/user_roles'
@@ -12,9 +12,11 @@ export class AuthRepository {
         fullName: data.name,
         email: data.email,
         password: hasPassword(data.password),
-        roles: {
-          create: data.roles.map((r) => ({ role: r.role })) // ✅ tạo nhiều role
-        }
+         roles: {
+        create: data.roles.map(val => ({
+          role: val.role, 
+        })) as Prisma.UserRoleCreateWithoutUserInput[],
+      },
       }
     })
   }
