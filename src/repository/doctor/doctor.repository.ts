@@ -6,6 +6,8 @@ export class DoctorRepository {
     keyword: string,
     status: UserStatus | 'All',
     user_type: UserType,
+    departmentId?: number,
+    facilityId?: number,
     skip = 0,
     take = 100
   ): Promise<{
@@ -27,10 +29,9 @@ export class DoctorRepository {
     >[]
     total: number
   }> {
-    // Chuẩn hóa chuỗi để tránh lỗi khoảng trắng hoặc ký tự Unicode
     const normalizeString = (str: string) => str.normalize('NFC').replace(/\s+/g, ' ').trim()
-
     const normalizedKeyword = normalizeString(keyword || '')
+
     const where: Prisma.UserWhereInput = {
       user_type,
       AND: [
@@ -44,7 +45,9 @@ export class DoctorRepository {
               ]
             }
           : {},
-        status && status !== 'All' ? { user_status: { equals: status as UserStatus } } : {}
+        status && status !== 'All' ? { user_status: { equals: status as UserStatus } } : {},
+        departmentId ? { departments: { some: { id: departmentId } } } : {},
+        facilityId ? { facilities: { some: { id: facilityId } } } : {}
       ]
     }
 
@@ -67,7 +70,9 @@ export class DoctorRepository {
           avatar: true,
           user_status: true,
           cccd: true,
-          is_update_profile: true
+          is_update_profile: true,
+          departments: { select: { id: true, name: true } },
+          facilities: { select: { id: true, name: true } }
         }
       }),
       prisma.user.count({ where })

@@ -36,6 +36,20 @@ const { router: mst_doctor_routes, protectedRoute, publicRoute, protectedWithRol
  *         required: false
  *         description: Tìm kiếm theo tên, email hoặc số điện thoại
  *       - in: query
+ *         name: departmentId
+ *         schema:
+ *           type: number
+ *           example: 1
+ *         required: false
+ *         description: Tìm kiếm theo phòng ban
+ *       - in: query
+ *         name: facilityId
+ *         schema:
+ *           type: number
+ *           example: 1
+ *         required: false
+ *         description: Tìm kiếm theo mã cơ sở
+ *       - in: query
  *         name: status
  *         schema:
  *           type: string

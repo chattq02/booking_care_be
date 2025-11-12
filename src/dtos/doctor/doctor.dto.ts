@@ -22,4 +22,14 @@ export class GetListDoctorQueryDto {
   @IsOptional()
   @IsIn(['Active', 'InActive', 'Banned', 'Pending', 'All'])
   status?: UserStatus
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt({ message: 'Mã chuyên khoa phải là số nguyên' })
+  departmentId?: number
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt({ message: 'Mã cơ sở phải là số nguyên' })
+  facilityId?: number
 }

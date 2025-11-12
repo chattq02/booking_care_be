@@ -147,13 +147,17 @@ export const seedDepartment = async () => {
 
   for (const facility of facilities) {
     // Random số lượng department cha muốn gán cho facility này (1 -> tất cả)
-    const randomDeptCount = faker.number.int({ min: 1, max: departments.length })
-    const shuffledDepartments = faker.helpers.arrayElements(departments, randomDeptCount)
+    const shuffledDepartments = faker.helpers.arrayElements(departments)
 
     for (const dept of shuffledDepartments) {
       // Tạo department cha hoặc lấy nếu đã tồn tại
       const parent = await prisma.department.upsert({
-        where: { name: dept.name },
+        where: {
+          name_facilityId: {
+            name: dept.name,
+            facilityId: facility.id
+          }
+        },
         update: {},
         create: {
           name: dept.name,
@@ -165,7 +169,7 @@ export const seedDepartment = async () => {
       if (dept.children && dept.children.length > 0) {
         for (const child of dept.children) {
           await prisma.department.upsert({
-            where: { name: child.name },
+            where: { name_facilityId: { name: child.name, facilityId: facility.id } },
             update: {},
             create: {
               name: child.name,

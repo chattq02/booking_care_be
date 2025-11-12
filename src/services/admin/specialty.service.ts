@@ -60,7 +60,7 @@ export class DepartmentService {
       )
     }
     // 1️⃣ Kiểm tra tên department con đã tồn tại chưa
-    const exists = await this.departmentRepo.findByName(dto.name)
+    const exists = await this.departmentRepo.findByName(dto.name, dto.facilityId)
     if (exists) {
       return res.status(httpStatusCode.BAD_REQUEST).json(
         new ResultsReturned({

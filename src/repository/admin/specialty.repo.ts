@@ -48,8 +48,15 @@ export class DepartmentRepository {
   }
 
   // 🟢 Lấy theo tên (check trùng)
-  findByName(name: string) {
-    return prisma.department.findUnique({ where: { name } })
+  findByName(name: string, facilityId: number) {
+    return prisma.department.findUnique({
+      where: {
+        name_facilityId: {
+          name,
+          facilityId
+        }
+      }
+    })
   }
 
   // 🟢 Tạo mới

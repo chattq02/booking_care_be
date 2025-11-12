@@ -21,24 +21,24 @@ export class AuthRepository {
 
   async findByEmail(email: string): Promise<
     | (Pick<
-      User,
-      | 'id'
-      | 'uuid'
-      | 'email'
-      | 'fullName'
-      | 'phone'
-      | 'gender'
-      | 'dateOfBirth'
-      | 'address'
-      | 'is_supper_admin'
-      | 'createdAt'
-      | 'updatedAt'
-      | 'is_verify'
-      | 'user_status'
-      | 'password'
-    > & {
-      roles: { role: Role }[]
-    })
+        User,
+        | 'id'
+        | 'uuid'
+        | 'email'
+        | 'fullName'
+        | 'phone'
+        | 'gender'
+        | 'dateOfBirth'
+        | 'address'
+        | 'is_supper_admin'
+        | 'createdAt'
+        | 'updatedAt'
+        | 'is_verify'
+        | 'user_status'
+        | 'password'
+      > & {
+        roles: { role: Role }[]
+      })
     | null
   > {
     const user = await prisma.user.findUnique({
@@ -92,27 +92,30 @@ export class AuthRepository {
     return tokenRecord ?? null
   }
 
-  async findById(id: number): Promise<User | null> {
-    return prisma.user.findUnique({ where: { id } })
+  async findById(id: number, includeFacilities = false): Promise<(User & { facilities?: any[] }) | null> {
+    return prisma.user.findUnique({
+      where: { id },
+      include: includeFacilities ? { facilities: true } : undefined
+    })
   }
 
   async findUserByUuid(user_uuid: string): Promise<
     | (Pick<
-      User,
-      | 'id'
-      | 'uuid'
-      | 'email'
-      | 'fullName'
-      | 'phone'
-      | 'gender'
-      | 'dateOfBirth'
-      | 'address'
-      | 'is_supper_admin'
-      | 'createdAt'
-      | 'updatedAt'
-    > & {
-      roles: { role: Role }[]
-    })
+        User,
+        | 'id'
+        | 'uuid'
+        | 'email'
+        | 'fullName'
+        | 'phone'
+        | 'gender'
+        | 'dateOfBirth'
+        | 'address'
+        | 'is_supper_admin'
+        | 'createdAt'
+        | 'updatedAt'
+      > & {
+        roles: { role: Role }[]
+      })
     | null
   > {
     const user = await prisma.user.findUnique({

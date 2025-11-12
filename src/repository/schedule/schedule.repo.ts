@@ -1,0 +1,80 @@
+import { Prisma, Schedule, ScheduleType } from '@prisma/client'
+import { prisma } from 'src/config/database.config'
+import { CreateScheduleDto } from 'src/dtos/schedule/create.dto'
+
+interface FindManyParams {
+  Id: number
+  keyword?: string
+  type: ScheduleType
+  skip?: number
+  take?: number
+}
+
+export class ScheduleRepository {
+  async findMany({
+    Id,
+    keyword,
+    type,
+    skip = 0,
+    take = 100
+  }: FindManyParams): Promise<{ data: Schedule[]; total: number }> {
+    // Build điều kiện where dựa theo type
+    const where: Prisma.ScheduleWhereInput = {}
+    if (type && Id) {
+      switch (type) {
+        case ScheduleType.DOCTOR:
+          where.doctorId = Id
+          break
+        case ScheduleType.DEPARTMENT:
+          where.departmentId = Id
+          break
+        case ScheduleType.FACILITY:
+          where.facilityId = Id
+          break
+      }
+      where.type = type
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.schedule.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.schedule.count({ where })
+    ])
+
+    return { data, total }
+  }
+  async findById(id: number): Promise<Schedule | null> {
+    return prisma.schedule.findUnique({
+      where: { id }
+    })
+  }
+
+  async create(dto: CreateScheduleDto): Promise<Schedule> {
+    return prisma.schedule.create({
+      data: {
+        ...dto,
+        slots: JSON.stringify(dto.slots)
+      }
+    })
+  }
+
+  async update(id: number, dto: CreateScheduleDto): Promise<Schedule> {
+    return prisma.schedule.update({
+      where: { id },
+      data: {
+        ...dto,
+        slots: JSON.stringify(dto.slots)
+      }
+    })
+  }
+
+  async delete(id: number): Promise<Schedule> {
+    return prisma.schedule.delete({
+      where: { id }
+    })
+  }
+}

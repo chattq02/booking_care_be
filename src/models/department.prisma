@@ -1,6 +1,6 @@
 model Department {
   id          Int     @id @default(autoincrement()) // Khóa chính
-  name        String  @unique // Tên chuyên khoa
+  name        String  // Tên chuyên khoa
   description String? // Mô tả thêm (nếu có)
   imageUrl    String? // Đường dẫn hình ảnh (nếu có)
   parentId    Int? // FK: Id chuyên khoa cha (nếu là chuyên khoa con)
@@ -17,5 +17,6 @@ model Department {
   createdAt DateTime @default(now()) // Ngày tạo
   updatedAt DateTime @updatedAt // Ngày cập nhật
 
+  @@unique([name, facilityId])
   @@map("departments") // Map tên bảng trong DB
 }

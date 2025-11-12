@@ -2,9 +2,8 @@ import { prisma } from '../config/database.config'
 import { seedAcademicTitle } from './academic_title.seed'
 import { seedDepartment } from './departments.seed'
 import { seedMedicalFacilities } from './medical_facility.seed'
+import { seedSchedule } from './schedule.seed'
 import { seedUsers } from './users.seed'
-
-// import { seedDepartments } from './departments.seed' // nếu có
 
 async function main() {
   console.log('🌱 Bắt đầu seed dữ liệu...')
@@ -13,11 +12,13 @@ async function main() {
   await prisma.academicTitle.deleteMany()
   await prisma.department.deleteMany()
   await prisma.medicalFacility.deleteMany()
+  await prisma.schedule.deleteMany()
 
+  await seedAcademicTitle()
   await seedMedicalFacilities()
   await seedDepartment()
-  await seedAcademicTitle()
   await seedUsers()
+  await seedSchedule()
 
   console.log('✅ Hoàn tất seed toàn bộ dữ liệu!')
 }

@@ -25,6 +25,14 @@ export const seedUsers = async () => {
     return
   }
 
+  // ✅ Lọc ra các cơ sở có ít nhất 1 department
+  const facilitiesWithDepartments = facilities.filter((f) => departments.some((d) => d.facilityId === f.id))
+
+  if (facilitiesWithDepartments.length === 0) {
+    console.log('❌ No facilities have departments. Please seed departments linked to facilities.')
+    return
+  }
+
   const baseUsers = [
     {
       fullName: 'Admin Chính',
@@ -36,8 +44,8 @@ export const seedUsers = async () => {
       is_verify: IsVerify.YES,
       user_status: UserStatus.Active,
       user_type: UserType.Admin,
-      facilityIds: facilities[0]?.id,
-      departmentIds: [departments[0]?.id].filter(Boolean),
+      facilityIds: [facilitiesWithDepartments[0].id],
+      departmentIds: [departments.find((d) => d.facilityId === facilitiesWithDepartments[0].id)?.id].filter(Boolean),
       academicTitleId: academicTitles[0]?.id
     },
     {
@@ -52,8 +60,8 @@ export const seedUsers = async () => {
       user_type: UserType.Doctor,
       experience: 10,
       description: 'Bác sĩ chuyên khoa Tim mạch với 10 năm kinh nghiệm',
-      facilityIds: facilities[0]?.id,
-      departmentIds: [departments[0]?.id].filter(Boolean),
+      facilityIds: [facilitiesWithDepartments[0].id],
+      departmentIds: [departments.find((d) => d.facilityId === facilitiesWithDepartments[0].id)?.id].filter(Boolean),
       academicTitleId: academicTitles[0]?.id
     },
     {
@@ -66,78 +74,74 @@ export const seedUsers = async () => {
       is_verify: IsVerify.YES,
       user_status: UserStatus.Active,
       user_type: UserType.Patient,
-      facilityIds: facilities[0]?.id,
-      departmentIds: [departments[0]?.id].filter(Boolean),
-      academicTitleId: academicTitles[0]?.id
-    },
-    {
-      fullName: 'Bác sĩ kiêm Admin',
-      email: 'both@example.com',
-      password: hasPassword('Both@123'),
-      phone: '0901234567',
-      cccd: '345678901234',
-      roles: [{ role: Role.DOCTOR }, { role: Role.ADMIN }],
-      is_verify: IsVerify.YES,
-      user_status: UserStatus.Active,
-      user_type: UserType.Doctor,
-      experience: 8,
-      description: 'Bác sĩ chuyên khoa Thần kinh với 8 năm kinh nghiệm',
-      facilityIds: facilities[0]?.id,
-      departmentIds: [departments[0]?.id].filter(Boolean),
+      facilityIds: [facilitiesWithDepartments[0].id],
+      departmentIds: [departments.find((d) => d.facilityId === facilitiesWithDepartments[0].id)?.id].filter(Boolean),
       academicTitleId: academicTitles[0]?.id
     }
   ]
 
-  const fakeUsers = Array.from({ length: 1000 }).map((_, i) => {
-    const isDoctor = faker.datatype.boolean(0.3)
-    const isAdmin = faker.datatype.boolean(0.1) && !isDoctor
-    const isPatient = !isDoctor && !isAdmin
+  // ✅ Fake users (bỏ qua facility nếu không có department)
+  const fakeUsers = Array.from({ length: 1000 })
+    .map((_, i) => {
+      const isDoctor = faker.datatype.boolean(0.3)
+      const isAdmin = faker.datatype.boolean(0.1) && !isDoctor
+      const isPatient = !isDoctor && !isAdmin
 
-    const roles = []
-    if (isDoctor) roles.push({ role: Role.DOCTOR })
-    if (isAdmin) roles.push({ role: Role.ADMIN })
-    if (isPatient) roles.push({ role: Role.USER })
+      const roles = []
+      if (isDoctor) roles.push({ role: Role.DOCTOR })
+      if (isAdmin) roles.push({ role: Role.ADMIN })
+      if (isPatient) roles.push({ role: Role.USER })
 
-    const facilityIds =
-      (isDoctor || isAdmin) && facilities.length > 0
-        ? [facilities[faker.number.int({ min: 0, max: facilities.length - 1 })]?.id].filter(Boolean)
-        : []
+      let selectedFacilityIds: number[] = []
 
-    const userData: any = {
-      fullName: faker.person.fullName(),
-      email: faker.internet.email().toLowerCase().replace('@', `+${i}@`),
-      password: hasPassword('User@123'),
-      phone: '09' + faker.string.numeric(8),
-      cccd: faker.string.numeric(12),
-      roles,
-      is_verify: faker.helpers.arrayElement([IsVerify.YES, IsVerify.NO]),
-      user_status: faker.helpers.arrayElement([
-        UserStatus.Active,
-        UserStatus.InActive,
-        UserStatus.Pending,
-        UserStatus.Banned
-      ]),
-      user_type: isDoctor ? UserType.Doctor : isAdmin ? UserType.Admin : UserType.Patient,
-      facilityIds,
-      gender: faker.helpers.arrayElement(['MALE', 'FEMALE', 'OTHER']),
-      dateOfBirth: faker.date.between({ from: '1970-01-01', to: '2005-12-31' }),
-      address: `${faker.location.streetAddress()}, ${faker.location.city()}`
-    }
+      if (isDoctor || isAdmin) {
+        // Chỉ chọn cơ sở có department
+        const facility = faker.helpers.arrayElement(facilitiesWithDepartments)
+        selectedFacilityIds = [facility.id]
+      }
 
-    if (isDoctor) {
-      userData.experience = faker.number.int({ min: 1, max: 30 })
-      userData.description = `Bác sĩ chuyên khoa với ${userData.experience} năm kinh nghiệm`
-      userData.academicTitleId = faker.helpers.arrayElement(academicTitles).id
-      // Gán 1-3 department ngẫu nhiên
-      const doctorDepartments = faker.helpers.arrayElements(
-        departments.filter((d) => !d.parentId),
-        { min: 1, max: 3 }
-      )
-      userData.departmentIds = doctorDepartments.map((d) => d.id)
-    }
+      const userData: any = {
+        fullName: faker.person.fullName(),
+        email: faker.internet.email().toLowerCase().replace('@', `+${i}@`),
+        password: hasPassword('User@123'),
+        phone: '09' + faker.string.numeric(8),
+        cccd: faker.string.numeric(12),
+        roles,
+        is_verify: faker.helpers.arrayElement([IsVerify.YES, IsVerify.NO]),
+        user_status: faker.helpers.arrayElement([
+          UserStatus.Active,
+          UserStatus.InActive,
+          UserStatus.Pending,
+          UserStatus.Banned
+        ]),
+        user_type: isDoctor ? UserType.Doctor : isAdmin ? UserType.Admin : UserType.Patient,
+        facilityIds: selectedFacilityIds,
+        gender: faker.helpers.arrayElement(['MALE', 'FEMALE', 'OTHER']),
+        dateOfBirth: faker.date.between({ from: '1970-01-01', to: '2005-12-31' }),
+        address: `${faker.location.streetAddress()}, ${faker.location.city()}`
+      }
 
-    return userData
-  })
+      if (isDoctor) {
+        const facilityId = selectedFacilityIds[0]
+        if (!facilityId) return null // ❌ Nếu không có facility hợp lệ => bỏ qua user này
+
+        const facilityDepartments = departments.filter((d) => d.facilityId === facilityId)
+        if (facilityDepartments.length === 0) return null // ❌ Nếu facility không có department => bỏ qua
+
+        userData.experience = faker.number.int({ min: 1, max: 30 })
+        userData.description = `Bác sĩ chuyên khoa với ${userData.experience} năm kinh nghiệm`
+        userData.academicTitleId = faker.helpers.arrayElement(academicTitles).id
+
+        const doctorDepartments = faker.helpers.arrayElements(facilityDepartments, {
+          min: 1,
+          max: Math.min(3, facilityDepartments.length)
+        })
+        userData.departmentIds = doctorDepartments.map((d) => d.id)
+      }
+
+      return userData
+    })
+    .filter(Boolean) // ✅ Bỏ qua user null (facility không hợp lệ)
 
   const allUsers = [...baseUsers, ...fakeUsers]
 
@@ -150,10 +154,7 @@ export const seedUsers = async () => {
         const user = await prisma.user.upsert({
           where: { email: u.email },
           update: {},
-          create: {
-            ...userData,
-            roles: { create: roles }
-          }
+          create: { ...userData, roles: { create: roles } }
         })
 
         if (facilityIds?.length) {
@@ -174,5 +175,5 @@ export const seedUsers = async () => {
     console.log(`✅ Inserted users: ${Math.min(i + batch.length, allUsers.length)}`)
   }
 
-  console.log('🎉 Done seeding users with academic titles, departments, and medical facilities')
+  console.log('🎉 Done seeding users (filtered by facility with departments)')
 }

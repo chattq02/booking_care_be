@@ -1,6 +1,18 @@
 // =========================
 // BẢNG CA KHÁM / LỊCH LÀM VIỆC (SCHEDULE)
 // =========================
+
+enum ScheduleType {
+  DOCTOR
+  DEPARTMENT
+  FACILITY
+}
+
+enum ScheduleStatus {
+  NORMAL    // Lịch bình thường, bác sĩ khám theo slots
+  OFF       // Lịch nghỉ
+  FIXED     // Lịch cố định (định kỳ)
+}
 model Schedule {
   id           Int       @id @default(autoincrement()) // Khóa chính
   doctorId     Int? // FK: Bác sĩ phụ trách
@@ -8,6 +20,8 @@ model Schedule {
   departmentId Int? // FK: Khoa/phòng
   date         DateTime? // Ngày làm việc cụ thể (null nếu là lịch tuần định kỳ)
   slots        Json // Mảng các ca giờ [{dayOfWeek, startTime, endTime, price}]
+  type         ScheduleType // Loại lịch (doctor, department, facility)
+  status       ScheduleStatus @default(NORMAL) // Trạng thái lịch
 
   // Quan hệ
   doctor       User?            @relation(fields: [doctorId], references: [id], onDelete: Cascade)
