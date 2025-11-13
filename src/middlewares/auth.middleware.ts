@@ -13,7 +13,7 @@ export function authMiddleware(roles: string[] = []) {
     try {
       const accessToken = req.cookies.access_token
 
-      const { roles: allowedRoles, user_status, is_supper_admin } = await decryptObject(req.cookies.iu)
+      const { roles: allowedRoles, user_status, is_supper_admin } = decryptObject(req.cookies.iu)
 
       if (!accessToken) {
         return res.status(httpStatusCode.NOT_FOUND).json(

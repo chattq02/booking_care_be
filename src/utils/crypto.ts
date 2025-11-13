@@ -32,6 +32,9 @@ export const encryptObject = (obj: any) => {
 }
 
 export const decryptObject = (encryptedText: string) => {
+  if(!encryptedText) {
+    return ""
+  }
   const parts = encryptedText.split(':')
   const iv = Buffer.from(parts[0], 'hex')
   const encrypted = parts[1]

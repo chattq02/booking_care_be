@@ -29,6 +29,7 @@ model MedicalFacility {
   departments Department[] // 1 cơ sở có nhiều chuyên khoa
   doctors     User[]       @relation("FacilityDoctors") // Nhiều bác sĩ thuộc nhiều cơ sở
   schedules   Schedule[]   @relation("FacilitySchedules")
+  userRoles   UserRole[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

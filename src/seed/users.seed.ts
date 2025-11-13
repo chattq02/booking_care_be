@@ -40,7 +40,7 @@ export const seedUsers = async () => {
       password: hasPassword('Admin@123'),
       phone: '0912345678',
       cccd: '012345678901',
-      roles: [{ role: Role.ADMIN }],
+      roles: [{ role: Role.ADMIN, facilityId: null }], // ✅ THÊM: Admin toàn hệ thống
       is_verify: IsVerify.YES,
       user_status: UserStatus.Active,
       user_type: UserType.Admin,
@@ -54,7 +54,7 @@ export const seedUsers = async () => {
       password: hasPassword('Doctor@123'),
       phone: '0987654321',
       cccd: '123456789012',
-      roles: [{ role: Role.DOCTOR }],
+      roles: [{ role: Role.DOCTOR, facilityId: facilitiesWithDepartments[0].id }], // ✅ THÊM: Doctor tại facility 1
       is_verify: IsVerify.YES,
       user_status: UserStatus.Active,
       user_type: UserType.Doctor,
@@ -70,13 +70,37 @@ export const seedUsers = async () => {
       password: hasPassword('User@123'),
       phone: '0977123456',
       cccd: '234567890123',
-      roles: [{ role: Role.USER }],
+      roles: [{ role: Role.USER, facilityId: facilitiesWithDepartments[0].id }], // ✅ THÊM: User tại facility 1
       is_verify: IsVerify.YES,
       user_status: UserStatus.Active,
       user_type: UserType.Patient,
       facilityIds: [facilitiesWithDepartments[0].id],
       departmentIds: [departments.find((d) => d.facilityId === facilitiesWithDepartments[0].id)?.id].filter(Boolean),
       academicTitleId: academicTitles[0]?.id
+    },
+    {
+      fullName: 'Bác sĩ Đa Cơ Sở',
+      email: 'multidoctor@example.com',
+      password: hasPassword('Doctor@123'),
+      phone: '0977123457',
+      cccd: '345678901234',
+      roles: [
+        { role: Role.DOCTOR, facilityId: facilitiesWithDepartments[0].id }, // ✅ THÊM: Doctor tại facility 1
+        { role: Role.ADMIN, facilityId: facilitiesWithDepartments[1]?.id }  // ✅ THÊM: Admin tại facility 2
+      ].filter(role => role.facilityId !== undefined), // ✅ Lọc role có facilityId hợp lệ
+      is_verify: IsVerify.YES,
+      user_status: UserStatus.Active,
+      user_type: UserType.Doctor,
+      experience: 8,
+      description: 'Bác sĩ làm việc tại nhiều cơ sở',
+      facilityIds: facilitiesWithDepartments.slice(0, 2).map(f => f.id), // ✅ Kết nối với 2 facilities
+      departmentIds: [
+        ...departments.filter(d => d.facilityId === facilitiesWithDepartments[0].id).slice(0, 1),
+        ...(facilitiesWithDepartments[1] ? 
+            departments.filter(d => d.facilityId === facilitiesWithDepartments[1].id).slice(0, 1) : 
+            [])
+      ].map(d => d.id),
+      academicTitleId: academicTitles[1]?.id
     }
   ]
 
@@ -88,16 +112,25 @@ export const seedUsers = async () => {
       const isPatient = !isDoctor && !isAdmin
 
       const roles = []
-      if (isDoctor) roles.push({ role: Role.DOCTOR })
-      if (isAdmin) roles.push({ role: Role.ADMIN })
-      if (isPatient) roles.push({ role: Role.USER })
-
       let selectedFacilityIds: number[] = []
 
       if (isDoctor || isAdmin) {
         // Chỉ chọn cơ sở có department
         const facility = faker.helpers.arrayElement(facilitiesWithDepartments)
         selectedFacilityIds = [facility.id]
+        
+        // ✅ CẬP NHẬT: Thêm facilityId vào roles
+        if (isDoctor) roles.push({ role: Role.DOCTOR, facilityId: facility.id })
+        if (isAdmin) roles.push({ role: Role.ADMIN, facilityId: facility.id })
+      } else {
+        // ✅ CẬP NHẬT: Patient có thể có role tại facility hoặc không
+        if (faker.datatype.boolean(0.7) && facilitiesWithDepartments.length > 0) {
+          const facility = faker.helpers.arrayElement(facilitiesWithDepartments)
+          selectedFacilityIds = [facility.id]
+          roles.push({ role: Role.USER, facilityId: facility.id })
+        } else {
+          roles.push({ role: Role.USER, facilityId: null })
+        }
       }
 
       const userData: any = {
@@ -151,11 +184,24 @@ export const seedUsers = async () => {
     await Promise.all(
       batch.map(async (u) => {
         const { facilityIds, roles, departmentIds, ...userData } = u
+        
+        // ✅ CẬP NHẬT: Tạo user trước (không tạo roles ngay)
         const user = await prisma.user.upsert({
           where: { email: u.email },
           update: {},
-          create: { ...userData, roles: { create: roles } }
+          create: userData // Không tạo roles ở đây nữa
         })
+
+        // ✅ CẬP NHẬT: Tạo roles với facilityId
+        if (roles?.length) {
+          await prisma.userRole.createMany({
+            data: roles.map((role: any) => ({
+              userId: user.id,
+              role: role.role,
+              facilityId: role.facilityId
+            }))
+          })
+        }
 
         if (facilityIds?.length) {
           await prisma.user.update({
@@ -175,5 +221,5 @@ export const seedUsers = async () => {
     console.log(`✅ Inserted users: ${Math.min(i + batch.length, allUsers.length)}`)
   }
 
-  console.log('🎉 Done seeding users (filtered by facility with departments)')
+  console.log('🎉 Done seeding users with facility-based roles')
 }

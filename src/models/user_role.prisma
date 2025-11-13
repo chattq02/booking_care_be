@@ -8,9 +8,11 @@ model UserRole {
   id         Int      @id @default(autoincrement())
   userId     Int
   role       Role // enum cố định
+  facilityId Int? // ✅ Liên kết với cơ sở y tế (có thể NULL cho admin toàn hệ thống)
   assignedAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id])
+  user     User             @relation(fields: [userId], references: [id])
+  facility MedicalFacility? @relation(fields: [facilityId], references: [id])
 
   @@unique([userId, role]) // 1 user không thể có cùng role 2 lần
   @@map("user_roles")

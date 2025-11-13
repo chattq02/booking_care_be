@@ -5,6 +5,7 @@ import { RegisterDto } from 'src/dtos/auth/register.dto'
 import { validateDto } from 'src/middlewares/validatorDTO.middleware'
 import { wrapRequestHandler } from 'src/utils/handlers'
 import { createRoleRouter } from 'src/utils/role-route'
+import { FacilityDto } from 'src/dtos/auth/select-facility.dto'
 
 const { router: auth_routes, protectedRoute, publicRoute, protectedWithRoles } = createRoleRouter()
 
@@ -61,6 +62,37 @@ publicRoute.post('/login', validateDto(LoginDto), wrapRequestHandler(authControl
  *         description: Lấy thất bại
  */
 protectedRoute.get('/get-list-facilities', wrapRequestHandler(authController.getListSelectFacilities))
+
+/**
+ * @openapi
+ * /v1/auth/select-facility:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Chọn cơ sở
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 example: BV12346
+ *               uuid:
+ *                 type: string
+ *                 example: emaasasfhiqwrqr...
+ *               id:
+ *                 type: number
+ *                 example: 1
+ *     responses:
+ *       200:
+ *         description: chọn thành công
+ *       400:
+ *         description: chọn thất bại
+ */
+protectedRoute.post('/select-facility', validateDto(FacilityDto), wrapRequestHandler(authController.selectFacility))
 
 /**
  * @openapi

@@ -9,9 +9,10 @@ import { TokenDto } from 'src/dtos/auth/token.dto'
 import { sendVerifyRegisterEmail } from 'src/utils/email'
 import { LoginDto } from 'src/dtos/auth/login.dto'
 import { config } from 'dotenv'
-import { comparePassword, encryptObject } from 'src/utils/crypto'
+import { comparePassword, decryptObject, encryptObject } from 'src/utils/crypto'
 import { EmailDto } from 'src/dtos/auth/email.dto'
 import { UserStatus } from '@prisma/client'
+import { FacilityDto } from 'src/dtos/auth/select-facility.dto'
 
 config()
 export class AuthService {
@@ -319,6 +320,7 @@ export class AuthService {
     cookies: {
       access_token: string
       refresh_token: string
+      if: string
     },
     res: Response
   ) => {
@@ -364,6 +366,8 @@ export class AuthService {
       path: '/'
     })
 
+    const infoFacility =  decryptObject(cookies.if)
+
     return res.status(httpStatusCode.OK).json(
       new ResultsReturned({
         isSuccess: true,
@@ -371,7 +375,9 @@ export class AuthService {
         message: 'Lấy thông tin thành công',
         data: {
           ...user,
-          roles: user?.roles.map((val) => val.role)
+          roles: user?.roles.map((val) => val.role),
+          is_selected: Boolean(infoFacility)
+            //  is_selected: false
         }
       })
     )
@@ -400,6 +406,13 @@ export class AuthService {
     })
 
     res.clearCookie('iu', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      path: '/'
+    })
+
+     res.clearCookie('if', {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
@@ -503,6 +516,7 @@ export class AuthService {
     cookies: {
       access_token: string
       refresh_token: string
+      if: string
     },
     res: Response
   ) => {
@@ -533,18 +547,30 @@ export class AuthService {
         })
       )
     }
+     const infoFacility =  decryptObject(cookies.if)
 
     return res.status(httpStatusCode.OK).json(
       new ResultsReturned({
         isSuccess: true,
         status: httpStatusCode.OK,
         message: 'Lấy danh sách thành công',
-        data: user
+        data: {
+          is_select: Boolean(infoFacility) ,
+          info: user
+        }
       })
     )
   }
 
-  selectFacility = async (dto: TokenDto, res: Response) => {
+  selectFacility = async (dto: FacilityDto, res: Response) => {
+     res.cookie('if', encryptObject(dto), {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: TOKEN_EXPIRES.ACCESS, // 1 ngày
+      path: '/'
+    })
+
     return res.status(httpStatusCode.OK).json(
       new ResultsReturned({
         isSuccess: true,
