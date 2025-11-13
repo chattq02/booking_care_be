@@ -46,6 +46,22 @@ const { router: auth_routes, protectedRoute, publicRoute, protectedWithRoles } =
  *         description: Thiếu thông tin đăng nhâp
  */
 publicRoute.post('/login', validateDto(LoginDto), wrapRequestHandler(authController.loginController))
+
+/**
+ * @openapi
+ * /v1/auth/get-list-facilities:
+ *   get:
+ *     tags:
+ *       - Auth
+ *     summary: Lấy danh sách cơ sở
+ *     responses:
+ *       200:
+ *         description: Lấy thành công
+ *       400:
+ *         description: Lấy thất bại
+ */
+protectedRoute.get('/get-list-facilities', wrapRequestHandler(authController.getListSelectFacilities))
+
 /**
  * @openapi
  * /v1/auth/register:

@@ -9,7 +9,7 @@ import { TokenDto } from 'src/dtos/auth/token.dto'
 import { sendVerifyRegisterEmail } from 'src/utils/email'
 import { LoginDto } from 'src/dtos/auth/login.dto'
 import { config } from 'dotenv'
-import { comparePassword } from 'src/utils/crypto'
+import { comparePassword, encryptObject } from 'src/utils/crypto'
 import { EmailDto } from 'src/dtos/auth/email.dto'
 import { UserStatus } from '@prisma/client'
 
@@ -205,20 +205,19 @@ export class AuthService {
       maxAge: TOKEN_EXPIRES.REFRESH, // 100 ngày
       path: '/'
     })
-    const rolesCookie = JSON.stringify(user.roles.map((val) => val.role))
 
-    res.cookie('roles', rolesCookie, {
-      httpOnly: true, // cho phép JS đọc
+    const infoUser = {
+      roles: user.roles.map((val) => val.role),
+      user_status: user.user_status,
+      is_supper_admin: user.is_supper_admin
+    }
+
+    res.cookie('iu', encryptObject(infoUser), {
+      httpOnly: true,
       secure: true,
       sameSite: 'none',
-      maxAge: TOKEN_EXPIRES.ACCESS
-    })
-
-    res.cookie('user_active', user.user_status, {
-      httpOnly: true, // cho phép JS đọc
-      secure: true,
-      sameSite: 'none',
-      maxAge: TOKEN_EXPIRES.ACCESS
+      maxAge: TOKEN_EXPIRES.ACCESS, // 1 ngày
+      path: '/'
     })
 
     const refreshExpiresAt = new Date(Date.now() + TOKEN_EXPIRES.REFRESH) // 100 days
@@ -351,6 +350,20 @@ export class AuthService {
       )
     }
 
+    const infoUser = {
+      roles: user?.roles.map((val) => val.role),
+      user_status: user?.user_status,
+      is_supper_admin: user?.is_supper_admin
+    }
+
+    res.cookie('iu', encryptObject(infoUser), {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: TOKEN_EXPIRES.ACCESS, // 1 ngày
+      path: '/'
+    })
+
     return res.status(httpStatusCode.OK).json(
       new ResultsReturned({
         isSuccess: true,
@@ -372,13 +385,6 @@ export class AuthService {
   ) => {
     const refreshToken = cookies.refresh_token
 
-    res.clearCookie('refresh_token', {
-      httpOnly: true,
-      secure: true, // bật khi deploy
-      sameSite: 'strict', // hoặc 'none' nếu dùng cross-origin
-      path: '/' // cần khớp với path lúc set cookie
-    })
-
     res.clearCookie('access_token', {
       httpOnly: true,
       secure: true,
@@ -393,14 +399,7 @@ export class AuthService {
       path: '/'
     })
 
-    res.clearCookie('roles', {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      path: '/'
-    })
-
-    res.clearCookie('user_active', {
+    res.clearCookie('iu', {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
@@ -495,6 +494,62 @@ export class AuthService {
         isSuccess: true,
         status: httpStatusCode.OK,
         message: 'Gửi thành công! Vui lòng kiểm tra email để xác thực tài khoản.',
+        data: null
+      })
+    )
+  }
+
+  getListFacility = async (
+    cookies: {
+      access_token: string
+      refresh_token: string
+    },
+    res: Response
+  ) => {
+    const accessToken = cookies.access_token
+
+    if (!accessToken) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Access_Token không tồn tại',
+          data: null
+        })
+      )
+    }
+
+    const decoded_access = await this.decodeAccessToken(accessToken)
+
+    const user = await this.authRepo.findFacilityByUuid(decoded_access.sub)
+
+    if (!user) {
+      res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy người dùng',
+          data: null
+        })
+      )
+    }
+
+    return res.status(httpStatusCode.OK).json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Lấy danh sách thành công',
+        data: user
+      })
+    )
+  }
+
+  selectFacility = async (dto: TokenDto, res: Response) => {
+    return res.status(httpStatusCode.OK).json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Chọn cơ sở làm việc thành công',
         data: null
       })
     )

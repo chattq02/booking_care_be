@@ -12,11 +12,11 @@ export class AuthRepository {
         fullName: data.name,
         email: data.email,
         password: hasPassword(data.password),
-         roles: {
-        create: data.roles.map(val => ({
-          role: val.role, 
-        })) as Prisma.UserRoleCreateWithoutUserInput[],
-      },
+        roles: {
+          create: data.roles.map((val) => ({
+            role: val.role
+          })) as Prisma.UserRoleCreateWithoutUserInput[]
+        }
       }
     })
   }
@@ -113,6 +113,7 @@ export class AuthRepository {
         | 'dateOfBirth'
         | 'address'
         | 'is_supper_admin'
+        | 'user_status'
         | 'createdAt'
         | 'updatedAt'
       > & {
@@ -132,8 +133,55 @@ export class AuthRepository {
         dateOfBirth: true,
         address: true,
         is_supper_admin: true,
+        user_status: true,
         createdAt: true,
         updatedAt: true,
+        roles: {
+          select: {
+            role: true // 👈 lấy danh sách role của user
+          }
+        },
+        facilities: {
+          select: {
+            id: true,
+            uuid: true,
+            code: true,
+            name: true
+          }
+        },
+        academicTitle: {
+          select: {
+            name: true
+          }
+        }
+      }
+    })
+
+    return user ?? null
+  }
+
+  async findFacilityByUuid(user_uuid: string): Promise<
+    | (Pick<User, 'uuid'> & {
+        facilities: { name: string }[]
+      })
+    | null
+  > {
+    const user = await prisma.user.findFirst({
+      where: { uuid: user_uuid },
+      select: {
+        uuid: true,
+        avatar: true,
+        fullName: true,
+        email: true,
+        facilities: {
+          select: {
+            id: true,
+            uuid: true,
+            code: true,
+            name: true,
+            address: true
+          }
+        },
         roles: {
           select: {
             role: true // 👈 lấy danh sách role của user

@@ -39,6 +39,10 @@ class AuthController {
   reSendVerifyEmailController = async (req: Request, res: Response) => {
     return this.authService.reSendVerifyEmail(req.body, res)
   }
+
+  getListSelectFacilities = async (req: Request, res: Response) => {
+    return this.authService.getListFacility(req.cookies as { access_token: string; refresh_token: string }, res)
+  }
 }
 const authController = new AuthController()
 export default authController

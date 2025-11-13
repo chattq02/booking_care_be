@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express'
 import { httpStatusCode } from 'src/constants/httpStatus'
+import { decryptObject } from 'src/utils/crypto'
 import { verifyToken } from 'src/utils/jwt'
 import { ResultsReturned } from 'src/utils/results-api'
 
@@ -11,8 +12,9 @@ export function authMiddleware(roles: string[] = []) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const accessToken = req.cookies.access_token
-      const allowedRoles = JSON.parse(req.cookies.roles || '[]')
-      const userActive = req.cookies.user_active
+
+      const { roles: allowedRoles, user_status, is_supper_admin } = await decryptObject(req.cookies.iu)
+
       if (!accessToken) {
         return res.status(httpStatusCode.NOT_FOUND).json(
           new ResultsReturned({
@@ -43,7 +45,7 @@ export function authMiddleware(roles: string[] = []) {
         )
       }
 
-      if (userActive === 'InActive') {
+      if (user_status === 'InActive') {
         return res.status(httpStatusCode.FORBIDDEN).json(
           new ResultsReturned({
             isSuccess: true,
@@ -54,7 +56,7 @@ export function authMiddleware(roles: string[] = []) {
         )
       }
 
-      const hasRole = roles.some((r) => allowedRoles.includes(r))
+      const hasRole = roles.some((r: string) => allowedRoles.includes(r))
 
       if (roles.length && !hasRole) {
         return res.status(httpStatusCode.FORBIDDEN).json(

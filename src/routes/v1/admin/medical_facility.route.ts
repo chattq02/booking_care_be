@@ -6,7 +6,7 @@ import { validateDto } from 'src/middlewares/validatorDTO.middleware'
 import { wrapRequestHandler } from 'src/utils/handlers'
 import { createRoleRouter } from 'src/utils/role-route'
 
-const { router: medicalFacilityRouter, protectedRoute, publicRoute } = createRoleRouter()
+const { router: medicalFacilityRouter, protectedRoute, publicRoute, protectedWithRoles } = createRoleRouter()
 
 // 🟢 Tạo mới cơ sở y tế
 /**
@@ -92,8 +92,9 @@ protectedRoute.put(
  *       200:
  *         description: Thành công
  */
-publicRoute.get(
+protectedWithRoles.get(
   '/medical-facility',
+  ['ADMIN'],
   validateDto(GetListQueryDto),
   wrapRequestHandler(medicalFacilityController.getList)
 )
