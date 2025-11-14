@@ -138,15 +138,17 @@ export class AuthRepository {
         updatedAt: true,
         roles: {
           select: {
-            role: true // 👈 lấy danh sách role của user
-          }
-        },
-        facilities: {
-          select: {
-            id: true,
-            uuid: true,
-            code: true,
-            name: true
+            role: true, // 👈 lấy danh sách role của user
+            facility: {
+              select: {
+                id: true,
+                uuid: true,
+                code: true,
+                name: true,
+                imageUrl: true,
+                address: true
+              }
+            }
           }
         },
         academicTitle: {
@@ -160,12 +162,7 @@ export class AuthRepository {
     return user ?? null
   }
 
-  async findFacilityByUuid(user_uuid: string): Promise<
-    | (Pick<User, 'uuid'> & {
-        facilities: { name: string }[]
-      })
-    | null
-  > {
+  async findFacilityByUuid(user_uuid: string): Promise<Pick<User, 'uuid'> | null> {
     const user = await prisma.user.findFirst({
       where: { uuid: user_uuid },
       select: {
@@ -173,18 +170,19 @@ export class AuthRepository {
         avatar: true,
         fullName: true,
         email: true,
-        facilities: {
-          select: {
-            id: true,
-            uuid: true,
-            code: true,
-            name: true,
-            address: true
-          }
-        },
         roles: {
           select: {
-            role: true // 👈 lấy danh sách role của user
+            role: true, // 👈 lấy danh sách role của user
+            facility: {
+              select: {
+                id: true,
+                uuid: true,
+                code: true,
+                name: true,
+                imageUrl: true,
+                address: true
+              }
+            }
           }
         }
       }

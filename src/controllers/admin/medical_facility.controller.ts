@@ -24,7 +24,7 @@ class MedicalFacilityController {
 
   // 📋 Lấy danh sách cơ sở y tế (có thể filter, paginate, search)
   getList = async (req: Request, res: Response) => {
-    return this.medicalFacilityService.getList(req.query as unknown as GetListQueryDto, res)
+    return this.medicalFacilityService.getList(req, res)
   }
 
   // 🔍 Lấy chi tiết 1 cơ sở y tế

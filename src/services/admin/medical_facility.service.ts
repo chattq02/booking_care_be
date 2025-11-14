@@ -1,9 +1,11 @@
-import { Response } from 'express'
+import { Prisma } from '@prisma/client'
+import { Request, Response } from 'express'
 import { httpStatusCode } from 'src/constants/httpStatus'
 import { CreateMedicalFacilityDto } from 'src/dtos/medical_facility/create.dto'
 import { GetListQueryDto } from 'src/dtos/medical_facility/get_list.dto'
 import { UpdateMedicalFacilityDto } from 'src/dtos/medical_facility/update.dto'
 import { MedicalFacilityRepository } from 'src/repository/admin/medical_facility.repo'
+import { buildWhereMedicalFacility } from 'src/utils/query-scopes/buildWhereMedicalFacility'
 
 import { ResultsReturned } from 'src/utils/results-api'
 
@@ -11,11 +13,40 @@ export class MedicalFacilityService {
   private medicalFacilityRepo = new MedicalFacilityRepository()
 
   // 📋 Lấy danh sách cơ sở y tế (phân trang + tìm kiếm)
-  getList = async (query: GetListQueryDto, res: Response) => {
-    const { page = 1, per_page = 10, keyword = '', status = 'All' } = query
+  getList = async (req: Request, res: Response) => {
+    const { page = 1, per_page = 10, keyword = '', status = 'All' } = req.query as unknown as GetListQueryDto
+
     const skip = (Number(page) - 1) * Number(per_page)
 
-    const { data, total } = await this.medicalFacilityRepo.findMany(keyword, Number(skip), Number(per_page), status)
+    const processedKeyword =
+      keyword
+        ?.normalize('NFC')
+        .replace(/[%_\\]/g, '\\$&') // Escape ký tự đặc biệt SQL LIKE
+        .trim() || ''
+
+    const where: Prisma.MedicalFacilityWhereInput = {
+      AND: [
+        processedKeyword
+          ? {
+              OR: [
+                { name: { contains: processedKeyword, mode: 'insensitive' as const } },
+                { address: { contains: processedKeyword, mode: 'insensitive' as const } },
+                { description: { contains: processedKeyword, mode: 'insensitive' as const } },
+                { code: { contains: processedKeyword, mode: 'insensitive' as const } },
+                { email: { contains: processedKeyword, mode: 'insensitive' as const } },
+                { phone: { contains: processedKeyword, mode: 'insensitive' as const } }
+              ]
+            }
+          : {},
+        status && status !== 'All' ? { isActive: { equals: status } } : {}
+      ]
+    }
+
+    const { data, total } = await this.medicalFacilityRepo.findMany(
+      buildWhereMedicalFacility(req, where),
+      Number(skip),
+      Number(per_page)
+    )
 
     const baseUrl = `${process.env.API_BASE_URL}/v1/medical-facility/get-list`
 

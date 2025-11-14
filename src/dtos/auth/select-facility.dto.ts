@@ -9,4 +9,7 @@ export class FacilityDto {
 
   @IsNotEmpty()
   id!: number
+
+  @IsNotEmpty()
+  role!: number
 }

@@ -29,7 +29,7 @@ class AuthController {
   }
 
   meController = async (req: Request, res: Response) => {
-    return this.authService.getMe(req.cookies as { access_token: string; refresh_token: string,if: string }, res)
+    return this.authService.getMe(req.cookies as { access_token: string; refresh_token: string; if: string }, res)
   }
 
   verifyEmailController = async (req: Request, res: Response) => {
@@ -40,11 +40,7 @@ class AuthController {
     return this.authService.reSendVerifyEmail(req.body, res)
   }
 
-  getListSelectFacilities = async (req: Request, res: Response) => {
-    return this.authService.getListFacility(req.cookies as { access_token: string; refresh_token: string,if: string }, res)
-  }
-
-   selectFacility = async (req: Request, res: Response) => {
+  selectFacility = async (req: Request, res: Response) => {
     return this.authService.selectFacility(req.body, res)
   }
 }

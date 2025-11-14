@@ -1,4 +1,4 @@
-import { MedicalFacilityStatus } from '@prisma/client'
+import { MedicalFacilityStatus, Prisma } from '@prisma/client'
 import { prisma } from 'src/config/database.config'
 import { CreateMedicalFacilityDto } from 'src/dtos/medical_facility/create.dto'
 import { UpdateMedicalFacilityDto } from 'src/dtos/medical_facility/update.dto'
@@ -12,31 +12,7 @@ export class MedicalFacilityRepository {
   }
 
   // 🟢 Lấy danh sách có phân trang + tìm kiếm
-  async findMany(keyword: string, skip: number, take: number, isActive: MedicalFacilityStatus | 'All') {
-    const processedKeyword =
-      keyword
-        ?.normalize('NFC')
-        .replace(/[%_\\]/g, '\\$&') // Escape ký tự đặc biệt SQL LIKE
-        .trim() || ''
-
-    const where = {
-      AND: [
-        processedKeyword
-          ? {
-              OR: [
-                { name: { contains: processedKeyword, mode: 'insensitive' as const } },
-                { address: { contains: processedKeyword, mode: 'insensitive' as const } },
-                { description: { contains: processedKeyword, mode: 'insensitive' as const } },
-                { code: { contains: processedKeyword, mode: 'insensitive' as const } },
-                { email: { contains: processedKeyword, mode: 'insensitive' as const } },
-                { phone: { contains: processedKeyword, mode: 'insensitive' as const } }
-              ]
-            }
-          : {},
-        isActive && isActive !== 'All' ? { isActive: { equals: isActive } } : {}
-      ]
-    }
-
+  async findMany(where: Prisma.MedicalFacilityWhereInput, skip: number, take: number) {
     const [data, total] = await Promise.all([
       prisma.medicalFacility.findMany({
         where,

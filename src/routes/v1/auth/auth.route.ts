@@ -50,21 +50,6 @@ publicRoute.post('/login', validateDto(LoginDto), wrapRequestHandler(authControl
 
 /**
  * @openapi
- * /v1/auth/get-list-facilities:
- *   get:
- *     tags:
- *       - Auth
- *     summary: Lấy danh sách cơ sở
- *     responses:
- *       200:
- *         description: Lấy thành công
- *       400:
- *         description: Lấy thất bại
- */
-protectedRoute.get('/get-list-facilities', wrapRequestHandler(authController.getListSelectFacilities))
-
-/**
- * @openapi
  * /v1/auth/select-facility:
  *   post:
  *     tags:

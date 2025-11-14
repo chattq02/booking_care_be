@@ -366,7 +366,9 @@ export class AuthService {
       path: '/'
     })
 
-    const infoFacility =  decryptObject(cookies.if)
+    const infoFacility = decryptObject(cookies.if)
+
+    console.log('infoFacility', infoFacility)
 
     return res.status(httpStatusCode.OK).json(
       new ResultsReturned({
@@ -375,9 +377,7 @@ export class AuthService {
         message: 'Lấy thông tin thành công',
         data: {
           ...user,
-          roles: user?.roles.map((val) => val.role),
-          is_selected: Boolean(infoFacility)
-            //  is_selected: false
+          is_selected: user?.is_supper_admin === 'YES' ? true : Boolean(infoFacility)
         }
       })
     )
@@ -412,7 +412,7 @@ export class AuthService {
       path: '/'
     })
 
-     res.clearCookie('if', {
+    res.clearCookie('if', {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
@@ -512,58 +512,8 @@ export class AuthService {
     )
   }
 
-  getListFacility = async (
-    cookies: {
-      access_token: string
-      refresh_token: string
-      if: string
-    },
-    res: Response
-  ) => {
-    const accessToken = cookies.access_token
-
-    if (!accessToken) {
-      return res.status(httpStatusCode.NOT_FOUND).json(
-        new ResultsReturned({
-          isSuccess: false,
-          status: httpStatusCode.NOT_FOUND,
-          message: 'Access_Token không tồn tại',
-          data: null
-        })
-      )
-    }
-
-    const decoded_access = await this.decodeAccessToken(accessToken)
-
-    const user = await this.authRepo.findFacilityByUuid(decoded_access.sub)
-
-    if (!user) {
-      res.status(httpStatusCode.NOT_FOUND).json(
-        new ResultsReturned({
-          isSuccess: false,
-          status: httpStatusCode.NOT_FOUND,
-          message: 'Không tìm thấy người dùng',
-          data: null
-        })
-      )
-    }
-     const infoFacility =  decryptObject(cookies.if)
-
-    return res.status(httpStatusCode.OK).json(
-      new ResultsReturned({
-        isSuccess: true,
-        status: httpStatusCode.OK,
-        message: 'Lấy danh sách thành công',
-        data: {
-          is_select: Boolean(infoFacility) ,
-          info: user
-        }
-      })
-    )
-  }
-
   selectFacility = async (dto: FacilityDto, res: Response) => {
-     res.cookie('if', encryptObject(dto), {
+    res.cookie('if', encryptObject(dto), {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
