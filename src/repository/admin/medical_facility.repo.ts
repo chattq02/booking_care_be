@@ -118,7 +118,7 @@ export class MedicalFacilityRepository {
           avatar: true,
           experience: true,
           academicTitle: { select: { name: true } },
-          departments: { select: { id: true, name: true } }
+          departments: { select: { id: true, name: true ,facilityId:true} }
         }
       }),
 

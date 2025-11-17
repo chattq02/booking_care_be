@@ -204,6 +204,8 @@ export class ScheduleService {
         )
     }
 
+    await this.scheduleRepo.deleteMany(Number(dto.doctorId))
+
     // Tạo lịch
     const created = await this.scheduleRepo.create(dto)
 

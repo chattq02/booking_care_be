@@ -8,6 +8,10 @@ export class CreateScheduleDto {
 
   @IsOptional()
   @IsInt()
+  id?: number
+
+  @IsOptional()
+  @IsInt()
   facilityId?: number
 
   @IsOptional()

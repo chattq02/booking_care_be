@@ -62,13 +62,25 @@ export class ScheduleRepository {
     })
   }
 
-  async update(id: number, dto: CreateScheduleDto): Promise<Schedule> {
-    return prisma.schedule.update({
-      where: { id },
-      data: {
+  async update(id: number | null, dto: CreateScheduleDto): Promise<Schedule> {
+    const safeId = id && id > 0 ? id : -1
+
+    return prisma.schedule.upsert({
+      where: { id: safeId },
+      update: {
+        ...dto,
+        slots: JSON.stringify(dto.slots)
+      },
+      create: {
         ...dto,
         slots: JSON.stringify(dto.slots)
       }
+    })
+  }
+
+  async deleteMany(id: number) {
+    await prisma.schedule.deleteMany({
+      where: { doctorId: id }
     })
   }
 
