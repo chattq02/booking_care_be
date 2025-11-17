@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
 import { CreateDepartmentDto } from 'src/dtos/specialty/create_department.dto'
 import { UpdateDepartmentDto } from 'src/dtos/specialty/update_department.dto'
 
@@ -13,21 +13,22 @@ export class DepartmentRepository {
   }
 
   // 🟢 Lấy danh sách có phân trang + tìm kiếm
-  async findMany(keyword: string, skip: number, take: number) {
+  async findMany(keyword: string, facilityId: number, skip: number, take: number) {
     const processedKeyword =
       keyword
         ?.normalize('NFC')
         .replace(/[%_\\]/g, '\\$&') // Escape ký tự đặc biệt SQL LIKE
         .trim() || ''
 
-    const where = processedKeyword
-      ? {
-          OR: [
-            { name: { contains: processedKeyword, mode: 'insensitive' as const } },
-            { description: { contains: processedKeyword, mode: 'insensitive' as const } }
-          ]
-        }
-      : {}
+    const where: Prisma.DepartmentWhereInput = {
+      facilityId: facilityId,
+      ...(processedKeyword && {
+        OR: [
+          { name: { contains: processedKeyword, mode: 'insensitive' } },
+          { description: { contains: processedKeyword, mode: 'insensitive' } }
+        ]
+      })
+    }
 
     const [data, total] = await Promise.all([
       prisma.department.findMany({
@@ -117,5 +118,52 @@ export class DepartmentRepository {
       },
       orderBy: { id: 'asc' } // tuỳ chọn
     })
+  }
+
+  // Trong DepartmentRepository
+  async findUsersInDepartmentPaged(
+    departmentId: number,
+    facilityId: number,
+    keyword: string,
+    skip: number,
+    take: number
+  ) {
+    const where: Prisma.UserWhereInput = {
+      departments: { some: { id: departmentId } },
+      facilities: { some: { id: facilityId } },
+      user_status: 'Active' as const,
+      OR: [
+        { fullName: { contains: keyword, mode: 'insensitive' } },
+        { email: { contains: keyword, mode: 'insensitive' } }
+      ]
+    }
+
+    const [data, total] = await prisma.$transaction([
+      prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          phone: true,
+          user_type: true,
+          avatar: true,
+          schedules: {
+            select: {
+              slots: true,
+              id: true,
+              type: true,
+              status: true
+            }
+          }
+        },
+        skip,
+        take,
+        orderBy: { fullName: 'asc' }
+      }),
+      prisma.user.count({ where })
+    ])
+
+    return { data, total }
   }
 }

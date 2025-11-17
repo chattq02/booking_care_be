@@ -4,6 +4,7 @@ import { CreateDepartmentDto } from 'src/dtos/specialty/create_department.dto'
 import { DeleteDepartmentDto } from 'src/dtos/specialty/delete_department.dto'
 import { GetListDepartmentQueryDto } from 'src/dtos/specialty/get-list_department.dto'
 import { GetTreeDepartmentByFacilityDto } from 'src/dtos/specialty/get-tree-department.dto'
+import { GetListUserDepartmentQueryDto } from 'src/dtos/specialty/get-user'
 import { UpdateDepartmentDto } from 'src/dtos/specialty/update_department.dto'
 import { MedicalFacilityRepository } from 'src/repository/admin/medical_facility.repo'
 import { DepartmentRepository } from 'src/repository/admin/specialty.repo'
@@ -17,10 +18,15 @@ export class DepartmentService {
 
   // 🟢 Lấy danh sách
   getListDepartment = async (query: GetListDepartmentQueryDto, res: Response) => {
-    const { page, per_page, keyword = '' } = query
+    const { page, per_page, keyword = '', facilityId } = query
     const skip = (page - 1) * per_page
 
-    const { data, total } = await this.departmentRepo.findMany(keyword, Number(skip), Number(per_page))
+    const { data, total } = await this.departmentRepo.findMany(
+      keyword,
+      Number(facilityId),
+      Number(skip),
+      Number(per_page)
+    )
 
     const baseUrl = `${process.env.API_BASE_URL}/v1/department/get-list`
 
@@ -253,5 +259,62 @@ export class DepartmentService {
         data: children
       })
     )
+  }
+
+  // 👥 Lấy danh sách user theo department và facility
+  getUsersByDepartment = async (query: GetListUserDepartmentQueryDto, departmentId: number, res: Response) => {
+    const { page, per_page, keyword = '', facilityId } = query as unknown as GetListUserDepartmentQueryDto
+    const skip = Number((Number(page) - 1) * Number(per_page))
+
+    // 1️⃣ Kiểm tra cơ sở y tế
+    const facility = await this.medicalFacilityRepo.findById(Number(facilityId))
+    if (!facility) {
+      return res.status(httpStatusCode.NOT_FOUND).json({
+        isSuccess: false,
+        status: httpStatusCode.NOT_FOUND,
+        message: 'Không tìm thấy cơ sở y tế',
+        data: null
+      })
+    }
+
+    // 2️⃣ Kiểm tra phòng ban
+    const department = await this.departmentRepo.findById(Number(departmentId))
+    if (!department || Number(department.facilityId) !== Number(facilityId)) {
+      return res.status(httpStatusCode.NOT_FOUND).json({
+        isSuccess: false,
+        status: httpStatusCode.NOT_FOUND,
+        message: 'Không tìm thấy khoa / phòng ban thuộc cơ sở này',
+        data: null
+      })
+    }
+
+    // 3️⃣ Lấy dữ liệu user với phân trang
+    const { data, total } = await this.departmentRepo.findUsersInDepartmentPaged(
+      Number(departmentId),
+      Number(facilityId),
+      keyword,
+      skip,
+      Number(per_page)
+    )
+
+    const baseUrl = `${process.env.API_BASE_URL}/v1/department/${departmentId}/facility/${facilityId}/users`
+    const next_page_url = skip + per_page < total ? `${baseUrl}?page=${page + 1}&per_page=${per_page}` : null
+    const prev_page_url = page > 1 ? `${baseUrl}?page=${page - 1}&per_page=${per_page}` : null
+
+    return res.status(httpStatusCode.OK).json({
+      isSuccess: true,
+      status: httpStatusCode.OK,
+      message: 'Lấy danh sách người dùng thành công',
+      data: {
+        current_page: Number(page),
+        data,
+        next_page_url,
+        prev_page_url,
+        path: baseUrl,
+        per_page,
+        to: Math.min(skip + Number(per_page), total),
+        total
+      }
+    })
   }
 }

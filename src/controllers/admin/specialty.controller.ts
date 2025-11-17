@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import { DeleteDepartmentDto } from 'src/dtos/specialty/delete_department.dto'
 import { GetListDepartmentQueryDto } from 'src/dtos/specialty/get-list_department.dto'
 import { GetTreeDepartmentByFacilityDto } from 'src/dtos/specialty/get-tree-department.dto'
+import { GetListUserDepartmentQueryDto } from 'src/dtos/specialty/get-user'
 import { DepartmentService } from 'src/services/admin/specialty.service'
 
 class DepartmentController {
@@ -38,6 +39,16 @@ class DepartmentController {
   getChildren = async (req: Request, res: Response) => {
     const { parentId } = req.params
     return this.departmentService.getChildren(Number(parentId), res)
+  }
+
+  // 📌 Lấy danh sách user theo phòng ban của cơ sở
+  getUsersByDepartment = async (req: Request, res: Response) => {
+    const { departmentId } = req.params
+    return this.departmentService.getUsersByDepartment(
+      req.query as unknown as GetListUserDepartmentQueryDto,
+      Number(departmentId),
+      res
+    )
   }
 }
 

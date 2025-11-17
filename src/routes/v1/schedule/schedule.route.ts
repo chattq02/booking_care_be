@@ -175,6 +175,67 @@ protectedWithRoles.delete('/delete/:id', ['ADMIN'], wrapRequestHandler(scheduleC
  *       200:
  *         description: Lấy thông tin lịch hẹn thành công
  */
-protectedRoute.get('/get-schedule/:id', wrapRequestHandler(scheduleController.getScheduleById))
+protectedRoute.get('/get-schedule/:id/:type', wrapRequestHandler(scheduleController.getScheduleById))
+
+/**
+ * @openapi
+ * /v1/schedule/get-schedule-doctor/{id}/{type}:
+ *   get:
+ *     tags:
+ *       - Schedule
+ *     summary: Lấy danh sách lịch với phân loại
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: ID của bác sĩ, phòng ban hoặc cơ sở
+ *       - in: path
+ *         name: type
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: [DOCTOR, DEPARTMENT, FACILITY]
+ *           example: FACILITY
+ *         description: Loại lịch
+ *       - in: query
+ *         name: date
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Ngày cần lấy lịch (YYYY-MM-DD)
+ *       - in: query
+ *         name: facilityCode
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Mã cơ sở (tùy chọn)
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *       - in: query
+ *         name: per_page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: Lấy danh sách lịch thành công
+ */
+
+protectedRoute.get(
+  '/get-schedule-doctor/:id/:type',
+  validateDto(GetListScheduleQueryDto),
+  wrapRequestHandler(scheduleController.getSchedulesByDoctor)
+)
 
 export default schedule_routes

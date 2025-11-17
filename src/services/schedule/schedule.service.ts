@@ -17,11 +17,11 @@ export class ScheduleService {
 
   // 🟢 Lấy danh sách lịch
   getListSchedule = async (query: GetListScheduleQueryDto, res: Response) => {
-    const { page = 1, per_page = 20, Id, type } = query
+    const { page = 1, per_page = 20, id, type } = query
     const skip = (page - 1) * per_page
 
     const { data, total } = await this.scheduleRepo.findMany({
-      Id: Number(Id),
+      Id: Number(id),
       type,
       skip,
       take: Number(per_page)
@@ -57,7 +57,7 @@ export class ScheduleService {
 
   // 🟢 Lấy lịch theo bác sĩ
   getSchedulesByDoctor = async (doctorId: number, query: GetListScheduleQueryDto, res: Response) => {
-    const { page = 1, per_page = 20 } = query
+    const { page = 1, per_page = 20, facilityCode } = query
     const skip = (page - 1) * per_page
 
     const doctor = await this.userRepo.findById(doctorId)
@@ -72,7 +72,12 @@ export class ScheduleService {
       )
     }
 
-    const { data, total } = await this.scheduleRepo.findMany({ Id: doctorId, type: 'DOCTOR', skip, take: per_page })
+    const { data, total } = await this.scheduleRepo.findMany({
+      Id: Number(doctorId),
+      type: 'DOCTOR',
+      skip,
+      take: per_page
+    })
 
     return res.status(httpStatusCode.OK).json(
       new ResultsReturned({
@@ -214,7 +219,6 @@ export class ScheduleService {
 
   // Cập nhật lịch
   updateSchedule = async (id: number, dto: UpdateScheduleDto, res: Response) => {
-    console.log("dto",dto)
     const found = await this.scheduleRepo.findById(id)
     if (!found)
       return res.status(httpStatusCode.NOT_FOUND).json(
@@ -227,7 +231,7 @@ export class ScheduleService {
       )
 
     await this.scheduleRepo.update(id, dto)
-    
+
     return res.status(httpStatusCode.OK).json(
       new ResultsReturned({
         isSuccess: true,

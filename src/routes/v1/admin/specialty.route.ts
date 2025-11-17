@@ -1,6 +1,7 @@
 import { departmentController } from 'src/controllers/admin/specialty.controller'
 import { CreateDepartmentDto } from 'src/dtos/specialty/create_department.dto'
 import { GetListDepartmentQueryDto } from 'src/dtos/specialty/get-list_department.dto'
+import { GetListUserDepartmentQueryDto } from 'src/dtos/specialty/get-user'
 import { UpdateDepartmentDto } from 'src/dtos/specialty/update_department.dto'
 import { validateDto } from 'src/middlewares/validatorDTO.middleware'
 import { wrapRequestHandler } from 'src/utils/handlers'
@@ -99,6 +100,11 @@ protectedRoute.put('/department/:id', validateDto(UpdateDepartmentDto), wrapRequ
  *           type: integer
  *           default: 1
  *       - in: query
+ *         name: facilityId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
  *         name: per_page
  *         schema:
  *           type: integer
@@ -177,4 +183,46 @@ protectedRoute.delete('/department/:id/:facilityId', wrapRequestHandler(departme
  *         description: Lấy thành công
  */
 publicRoute.get('/department/:parentId/children', wrapRequestHandler(departmentController.getChildren))
+
+/**
+ * @swagger
+ * /v1/admin/department/{departmentId}/users:
+ *   get:
+ *     summary: Lấy danh sách user theo phòng ban + cơ sở (có phân trang)
+ *     tags: [Department]
+ *     parameters:
+ *       - in: path
+ *         name: departmentId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: facilityId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: per_page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: keyword
+ *         schema:
+ *           type: string
+ *           description: Tìm theo tên hoặc email
+ *     responses:
+ *       200:
+ *         description: Lấy thành công
+ */
+publicRoute.get(
+  '/department/:departmentId/users',
+  validateDto(GetListUserDepartmentQueryDto),
+  wrapRequestHandler(departmentController.getUsersByDepartment)
+)
 export default departmentRoutes

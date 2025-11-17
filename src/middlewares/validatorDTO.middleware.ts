@@ -4,7 +4,7 @@ import { Request, Response, NextFunction } from 'express'
 
 export const validateDto = (DtoClass: any) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    const data = req.method === 'GET' ? req.query : req.body
+    const data = { ...req.query, ...req.params, ...req.body }
 
     // ✅ Convert sang instance của class
     const dtoInstance = plainToInstance(DtoClass, data)
