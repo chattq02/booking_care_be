@@ -131,7 +131,7 @@ export class DepartmentRepository {
     const where: Prisma.UserWhereInput = {
       departments: { some: { id: departmentId } },
       facilities: { some: { id: facilityId } },
-      user_status: 'Active' as const,
+      // user_status: 'Active' as const,
       OR: [
         { fullName: { contains: keyword, mode: 'insensitive' } },
         { email: { contains: keyword, mode: 'insensitive' } }

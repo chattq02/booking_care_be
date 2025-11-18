@@ -307,7 +307,18 @@ export class DepartmentService {
       message: 'Lấy danh sách người dùng thành công',
       data: {
         current_page: Number(page),
-        data,
+        data: data.map((user) => {
+          return {
+            ...user,
+            schedules:
+              user.schedules.length > 0
+                ? user.schedules.map((schedule) => ({
+                    ...schedule,
+                    slots: typeof schedule.slots === 'string' ? JSON.parse(schedule.slots) : schedule.slots
+                  }))
+                : []
+          }
+        }),
         next_page_url,
         prev_page_url,
         path: baseUrl,
