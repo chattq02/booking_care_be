@@ -238,4 +238,47 @@ protectedRoute.get(
   wrapRequestHandler(scheduleController.getSchedulesByDoctor)
 )
 
+/**
+ * @openapi
+ * /v1/schedule/get-schedule-doctor-day:
+ *   get:
+ *     tags:
+ *       - Schedule
+ *     summary: Lấy chi tiết lịch theo ngày cho bác sĩ
+ *     parameters:
+ *       - in: query
+ *         name: doctorId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           description: ID của bác sĩ
+ *       - in: query
+ *         name: date
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Ngày cần lấy lịch (YYYY-MM-DD)
+ *       - in: query
+ *         name: departmentId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Id của phòng ban
+ *       - in: query
+ *         name: facilityId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         description: Id của cơ sở
+ *     responses:
+ *       200:
+ *         description: Lấy danh sách lịch thành công
+ */
+
+protectedRoute.get('/get-schedule-doctor-day', wrapRequestHandler(scheduleController.getSchedulesByDoctorDay))
+
 export default schedule_routes

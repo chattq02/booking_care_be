@@ -10,6 +10,7 @@ import { MedicalFacilityRepository } from 'src/repository/admin/medical_facility
 import { DepartmentRepository } from 'src/repository/admin/specialty.repo'
 
 import { ResultsReturned } from 'src/utils/results-api'
+import { SlotConfig } from '../schedule/helper'
 
 export class DepartmentService {
   private departmentRepo = new DepartmentRepository()
@@ -297,6 +298,9 @@ export class DepartmentService {
       Number(per_page)
     )
 
+    // Lấy ngày hôm nay (không bao gồm thời gian)
+    const todayStr = new Date().toISOString().split('T')[0]
+
     const baseUrl = `${process.env.API_BASE_URL}/v1/department/${departmentId}/facility/${facilityId}/users`
     const next_page_url = skip + per_page < total ? `${baseUrl}?page=${page + 1}&per_page=${per_page}` : null
     const prev_page_url = page > 1 ? `${baseUrl}?page=${page - 1}&per_page=${per_page}` : null
@@ -307,18 +311,29 @@ export class DepartmentService {
       message: 'Lấy danh sách người dùng thành công',
       data: {
         current_page: Number(page),
-        data: data.map((user) => {
-          return {
-            ...user,
-            schedules:
-              user.schedules.length > 0
-                ? user.schedules.map((schedule) => ({
-                    ...schedule,
-                    slots: typeof schedule.slots === 'string' ? JSON.parse(schedule.slots) : schedule.slots
-                  }))
-                : []
-          }
-        }),
+        data: data.map((user) => ({
+          ...user,
+          schedules: user.schedules
+            .map((schedule) => {
+              const slots: SlotConfig[] =
+                typeof schedule.slots === 'string' ? JSON.parse(schedule.slots) : schedule.slots
+              const filteredSlots = slots
+                .map((slot) => {
+                  // Chỉ giữ lại các daySchedules từ hôm nay trở đi
+                  const daySchedules = (slot.daySchedules || []).filter((day) => day.date >= todayStr)
+                  return daySchedules.length > 0
+                    ? {
+                        ...slot,
+                        daySchedules,
+                        selectedDates: (slot.selectedDates || []).filter((date) => date >= todayStr)
+                      }
+                    : null
+                })
+                .filter(Boolean)
+              return filteredSlots.length > 0 ? { ...schedule, slots: filteredSlots } : null
+            })
+            .filter(Boolean)
+        })),
         next_page_url,
         prev_page_url,
         path: baseUrl,

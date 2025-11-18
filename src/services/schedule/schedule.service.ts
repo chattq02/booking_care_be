@@ -8,6 +8,7 @@ import { DepartmentRepository } from 'src/repository/admin/specialty.repo'
 import { AuthRepository } from 'src/repository/auth/auth.repository'
 import { ScheduleRepository } from 'src/repository/schedule/schedule.repo'
 import { ResultsReturned } from 'src/utils/results-api'
+import { filterSlotsByDate } from './helper'
 
 export class ScheduleService {
   private scheduleRepo = new ScheduleRepository()
@@ -263,5 +264,91 @@ export class ScheduleService {
       .json(
         new ResultsReturned({ isSuccess: true, status: httpStatusCode.OK, message: 'Xóa lịch thành công', data: null })
       )
+  }
+
+  // 🟢 Lấy chi tiết lịch theo ngày cho bác sĩ
+  getSchedulesByDoctorDay = async (query: unknown, res: Response) => {
+    const { doctorId, date, departmentId, facilityId } = query as {
+      doctorId: number
+      date: string
+      departmentId: number
+      facilityId: number
+    }
+
+    if (doctorId) {
+      const doctor = await this.userRepo.findById(Number(doctorId), true)
+      if (!doctor)
+        return res.status(httpStatusCode.NOT_FOUND).json(
+          new ResultsReturned({
+            isSuccess: false,
+            status: httpStatusCode.NOT_FOUND,
+            message: 'Không tìm thấy bác sĩ',
+            data: null
+          })
+        )
+      if (facilityId && !doctor.facilities?.some((f) => f.id === Number(facilityId)))
+        return res.status(httpStatusCode.BAD_REQUEST).json(
+          new ResultsReturned({
+            isSuccess: false,
+            status: httpStatusCode.BAD_REQUEST,
+            message: 'Bác sĩ không thuộc cơ sở y tế',
+            data: null
+          })
+        )
+    }
+
+    // Kiểm tra cơ sở y tế
+    if (facilityId) {
+      const facility = await this.facilityRepo.findById(Number(facilityId))
+      if (!facility)
+        return res.status(httpStatusCode.NOT_FOUND).json(
+          new ResultsReturned({
+            isSuccess: false,
+            status: httpStatusCode.NOT_FOUND,
+            message: 'Không tìm thấy cơ sở y tế',
+            data: null
+          })
+        )
+    }
+
+    // Kiểm tra phòng ban
+    if (departmentId) {
+      const department = await this.departmentRepo.findById(Number(departmentId))
+      if (!department)
+        return res.status(httpStatusCode.NOT_FOUND).json(
+          new ResultsReturned({
+            isSuccess: false,
+            status: httpStatusCode.NOT_FOUND,
+            message: 'Không tìm thấy phòng ban',
+            data: null
+          })
+        )
+      if (facilityId && department.facilityId !== Number(facilityId))
+        return res.status(httpStatusCode.BAD_REQUEST).json(
+          new ResultsReturned({
+            isSuccess: false,
+            status: httpStatusCode.BAD_REQUEST,
+            message: 'Phòng ban không thuộc cơ sở y tế',
+            data: null
+          })
+        )
+    }
+
+    const data = await this.scheduleRepo.findScheduleDoctorId(
+      Number(doctorId),
+      Number(departmentId),
+      Number(facilityId)
+    )
+
+    const slots = data?.slots ? (typeof data.slots === 'string' ? JSON.parse(data.slots) : data.slots) : {}
+
+    return res.status(httpStatusCode.OK).json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Lấy chi tiết lịch theo ngày cho bác sĩ thành công',
+        data: filterSlotsByDate(slots, date)
+      })
+    )
   }
 }

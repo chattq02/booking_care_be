@@ -89,4 +89,14 @@ export class ScheduleRepository {
       where: { id }
     })
   }
+  async findScheduleDoctorId(id: number, departmentId: number, facilityId: number): Promise<Schedule | null> {
+    return prisma.schedule.findFirst({
+      where: {
+        doctorId: id,
+        departmentId: departmentId,
+        facilityId: facilityId
+      }
+      // Không dùng select
+    })
+  }
 }

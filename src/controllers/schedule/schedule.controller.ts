@@ -18,6 +18,12 @@ class ScheduleController {
     return this.scheduleService.getSchedulesByDoctor(Number(doctorId), query, res)
   }
 
+  // Lấy chi tiết lịch theo ngày cho bác sĩ
+  getSchedulesByDoctorDay = async (req: Request, res: Response) => {
+    const query = req.query as unknown
+    return this.scheduleService.getSchedulesByDoctorDay(query, res)
+  }
+
   // Lấy danh sách lịch của 1 cơ sở y tế (bệnh viện)
   getSchedulesByFacility = async (req: Request, res: Response) => {
     const { facilityId } = req.params
