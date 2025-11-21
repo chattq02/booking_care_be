@@ -1,15 +1,18 @@
 import { config } from 'dotenv'
-import { Response } from 'express'
+import { Request, Response } from 'express'
 import { httpStatusCode } from 'src/constants/httpStatus'
 import { GetListDoctorQueryDto } from 'src/dtos/doctor/doctor.dto'
 import { DoctorRepository } from 'src/repository/doctor/doctor.repository'
+import { ScheduleRepository } from 'src/repository/schedule/schedule.repo'
 
 import { ResultsReturned } from 'src/utils/results-api'
+import { filterSlotsByDate, filterSlotsByDateSelected } from '../schedule/helper'
 
 config()
 
 export class DoctorService {
   private doctorRepo = new DoctorRepository()
+  private scheduleRepo = new ScheduleRepository()
 
   getListDoctor = async (query: GetListDoctorQueryDto, res: Response) => {
     const { page, per_page, keyword = '', status = 'All', departmentId, facilityId } = query
@@ -21,10 +24,10 @@ export class DoctorService {
       keyword,
       status,
       'Doctor',
-      departmentId ? Number(departmentId) : undefined,
-      facilityId ? Number(facilityId) : undefined,
       Number(skip),
-      Number(per_page)
+      Number(per_page),
+      facilityId ? Number(facilityId) : undefined,
+      departmentId ? Number(departmentId) : undefined
     )
 
     const baseUrl = `${process.env.API_BASE_URL}/v1/doctor/get-list-doctor`
@@ -51,6 +54,57 @@ export class DoctorService {
           to: Math.min(Number(skip) + Number(per_page), total),
           total
         }
+      })
+    )
+  }
+
+  getDoctorById = async (id: string, res: Response) => {
+    const doctor = await this.doctorRepo.getDoctorById(Number(id))
+    if (!doctor) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy thông tin bác sĩ',
+          data: null
+        })
+      )
+    }
+    return res.status(httpStatusCode.OK).json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Lấy thông tin thành công',
+        data: doctor
+      })
+    )
+  }
+
+  getScheduleDoctorByDate = async (req: Request, res: Response) => {
+    const { doctorId, date } = req.query as { doctorId: string; date: string }
+
+    const doctor = await this.doctorRepo.getDoctorById(Number(doctorId))
+    if (!doctor) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy thông tin bác sĩ',
+          data: null
+        })
+      )
+    }
+
+    const data = await this.scheduleRepo.findScheduleDoctorId(Number(doctorId))
+
+    const slots = data?.slots ? (typeof data.slots === 'string' ? JSON.parse(data.slots) : data.slots) : {}
+
+    return res.status(httpStatusCode.OK).json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Lấy chi tiết lịch theo ngày cho bác sĩ thành công',
+        data: filterSlotsByDateSelected(slots, date)
       })
     )
   }

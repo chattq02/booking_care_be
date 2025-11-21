@@ -6,10 +6,10 @@ export class DoctorRepository {
     keyword: string,
     status: UserStatus | 'All',
     user_type: UserType,
-    departmentId?: number,
-    facilityId?: number,
     skip = 0,
-    take = 100
+    take = 100,
+    facilityId?: number,
+    departmentId?: number
   ): Promise<{
     data: Pick<
       User,
@@ -72,12 +72,37 @@ export class DoctorRepository {
           cccd: true,
           is_update_profile: true,
           departments: { select: { id: true, name: true } },
-          facilities: { select: { id: true, name: true } }
+          facilities: { select: { id: true, name: true } },
+          academicTitle: true
         }
       }),
       prisma.user.count({ where })
     ])
 
     return { data, total }
+  }
+
+  async getDoctorById(id: number) {
+    return await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        uuid: true,
+        email: true,
+        fullName: true,
+        phone: true,
+        gender: true,
+        dateOfBirth: true,
+        address: true,
+        createdAt: true,
+        avatar: true,
+        user_status: true,
+        cccd: true,
+        is_update_profile: true,
+        departments: { select: { id: true, name: true } },
+        facilities: { select: { id: true, name: true } },
+        academicTitle: true
+      }
+    })
   }
 }

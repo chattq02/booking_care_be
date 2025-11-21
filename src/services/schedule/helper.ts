@@ -36,3 +36,27 @@ export const filterSlotsByDate = (slots: SlotConfig[], targetDate: string): Slot
 
   return filteredSlots
 }
+
+export const filterSlotsByDateSelected = (slots: SlotConfig[], targetDate: string): SlotConfig[] => {
+  const filteredSlots = slots
+    .map((slot) => {
+      const filteredDaySchedules = slot.daySchedules
+        .filter((day) => day.date === targetDate)
+        .map((day) => {
+          const filteredSlots = day.slots.filter((slot) => slot.selected)
+          return {
+            ...day,
+            slots: filteredSlots
+          }
+        })
+
+      return {
+        ...slot,
+        daySchedules: filteredDaySchedules,
+        selectedDates: filteredDaySchedules.length > 0 ? [targetDate] : []
+      }
+    })
+    .filter((slot) => slot.daySchedules.length > 0)
+
+  return filteredSlots
+}
