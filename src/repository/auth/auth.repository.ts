@@ -133,6 +133,7 @@ export class AuthRepository {
         dateOfBirth: true,
         address: true,
         is_supper_admin: true,
+        is_update_profile: true,
         user_status: true,
         createdAt: true,
         updatedAt: true,
