@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client'
+import { MedicalFacilityStatus, Prisma } from '@prisma/client'
 import { Request, Response } from 'express'
 import { httpStatusCode } from 'src/constants/httpStatus'
 import { CreateMedicalFacilityDto } from 'src/dtos/medical_facility/create.dto'
@@ -13,9 +13,13 @@ export class MedicalFacilityService {
   private medicalFacilityRepo = new MedicalFacilityRepository()
 
   // 📋 Lấy danh sách cơ sở y tế (phân trang + tìm kiếm)
-  getList = async (req: Request, res: Response) => {
-    const { page = 1, per_page = 10, keyword = '', status = 'All' } = req.query as unknown as GetListQueryDto
-
+  getList = async (req: Request, res: Response, status_facility?: MedicalFacilityStatus) => {
+    const {
+      page = 1,
+      per_page = 10,
+      keyword = '',
+      status = status_facility ? status_facility : 'All'
+    } = req.query as unknown as GetListQueryDto
     const skip = (Number(page) - 1) * Number(per_page)
 
     const processedKeyword =
@@ -38,7 +42,7 @@ export class MedicalFacilityService {
               ]
             }
           : {},
-        status && status !== 'All' ? { isActive: { equals: status } } : {}
+        status && status !== 'All' ? { isActive: { equals: status as MedicalFacilityStatus } } : {}
       ]
     }
 

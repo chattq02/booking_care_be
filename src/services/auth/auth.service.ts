@@ -156,7 +156,7 @@ export class AuthService {
         new ResultsReturned({
           isSuccess: false,
           status: httpStatusCode.BAD_REQUEST,
-          message: 'Tài khoản chưa được verify',
+          message: 'Tài khoản chưa được verify, vui lòng kiểm tra email',
           data: null
         })
       )
@@ -175,13 +175,19 @@ export class AuthService {
       )
     }
 
-    // 🔍 4. Kiểm tra đã active chưa
+    // 🔍 4. Kiểm tra trạng thái tài khoản
     if (user.user_status !== UserStatus.Active) {
+      const statusMessages = {
+        [UserStatus.Banned]: 'Tài khoản đã bị khóa',
+        [UserStatus.InActive]: 'Tài khoản chưa được kích hoạt',
+        [UserStatus.Pending]: 'Tài khoản đang chờ duyệt'
+      }
+
       return res.status(httpStatusCode.BAD_REQUEST).json(
         new ResultsReturned({
           isSuccess: false,
           status: httpStatusCode.BAD_REQUEST,
-          message: 'Tài khoản đã bị khóa',
+          message: statusMessages[user.user_status] || 'Tài khoản không khả dụng',
           data: null
         })
       )

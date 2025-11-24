@@ -1,4 +1,4 @@
-import { MedicalFacilityStatus, Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 import { prisma } from 'src/config/database.config'
 import { CreateMedicalFacilityDto } from 'src/dtos/medical_facility/create.dto'
 import { UpdateMedicalFacilityDto } from 'src/dtos/medical_facility/update.dto'
@@ -118,7 +118,7 @@ export class MedicalFacilityRepository {
           avatar: true,
           experience: true,
           academicTitle: { select: { name: true } },
-          departments: { select: { id: true, name: true ,facilityId:true} }
+          departments: { select: { id: true, name: true, facilityId: true } }
         }
       }),
 

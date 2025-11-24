@@ -27,6 +27,10 @@ class MedicalFacilityController {
     return this.medicalFacilityService.getList(req, res)
   }
 
+  getListActive = async (req: Request, res: Response) => {
+    return this.medicalFacilityService.getList(req, res, 'Active')
+  }
+
   // 🔍 Lấy chi tiết 1 cơ sở y tế
   getDetail = async (req: Request, res: Response) => {
     const { id } = req.params
