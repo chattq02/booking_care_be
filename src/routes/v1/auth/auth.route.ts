@@ -6,6 +6,7 @@ import { validateDto } from 'src/middlewares/validatorDTO.middleware'
 import { wrapRequestHandler } from 'src/utils/handlers'
 import { createRoleRouter } from 'src/utils/role-route'
 import { FacilityDto } from 'src/dtos/auth/select-facility.dto'
+import { UpdateUserDto } from 'src/dtos/auth/update-user.dto'
 
 const { router: auth_routes, protectedRoute, publicRoute, protectedWithRoles } = createRoleRouter()
 
@@ -298,4 +299,101 @@ publicRoute.post(
   wrapRequestHandler(authController.reSendVerifyEmailController)
 )
 
+/**
+ * @openapi
+ * /v1/auth/user:
+ *   put:
+ *     tags:
+ *       - Auth
+ *     summary: Cập nhật thông tin user
+ *     description: Cập nhật thông tin người dùng theo ID
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fullName:
+ *                 type: string
+ *                 example: "Trịnh Quang Chất Updated"
+ *               gender:
+ *                 type: string
+ *                 enum: [male, female, other]
+ *                 example: "male"
+ *               phone:
+ *                 type: string
+ *                 example: "0787267412"
+ *               birthday:
+ *                 type: string
+ *                 format: date-time
+ *                 example: "2025-11-01T17:00:00.000Z"
+ *               cccd:
+ *                 type: string
+ *                 example: "123456789012"
+ *               healthInsurance:
+ *                 type: string
+ *                 example: "BH123456789"
+ *               occupation:
+ *                 type: string
+ *                 example: "Software Developer"
+ *               address:
+ *                 type: string
+ *                 example: "123 Đường ABC, Quận 1, TP.HCM"
+ *     responses:
+ *       200:
+ *         description: Cập nhật user thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: User updated successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                       example: 1
+ *                     uuid:
+ *                       type: string
+ *                       example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+ *                     email:
+ *                       type: string
+ *                       example: "chat.tq.updated@solashi.com"
+ *                     fullName:
+ *                       type: string
+ *                       example: "Trịnh Quang Chất Updated"
+ *                     phone:
+ *                       type: string
+ *                       example: "0787267412"
+ *                     gender:
+ *                       type: string
+ *                       example: "male"
+ *                     user_type:
+ *                       type: string
+ *                       example: "Patient"
+ *                     user_status:
+ *                       type: string
+ *                       example: "Active"
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: Dữ liệu không hợp lệ
+ *       401:
+ *         description: Không có quyền truy cập
+ *       404:
+ *         description: Không tìm thấy user
+ *       500:
+ *         description: Lỗi server
+ */
+protectedRoute.put('/user', validateDto(UpdateUserDto), wrapRequestHandler(authController.updateUser))
 export default auth_routes

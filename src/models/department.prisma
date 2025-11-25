@@ -1,6 +1,6 @@
 model Department {
   id          Int     @id @default(autoincrement()) // Khóa chính
-  name        String  // Tên chuyên khoa
+  name        String // Tên chuyên khoa
   description String? // Mô tả thêm (nếu có)
   imageUrl    String? // Đường dẫn hình ảnh (nếu có)
   parentId    Int? // FK: Id chuyên khoa cha (nếu là chuyên khoa con)

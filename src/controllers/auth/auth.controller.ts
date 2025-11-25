@@ -43,6 +43,10 @@ class AuthController {
   selectFacility = async (req: Request, res: Response) => {
     return this.authService.selectFacility(req.body, res)
   }
+
+  updateUser = async (req: Request, res: Response) => {
+    return this.authService.updateUser(req, res)
+  }
 }
 const authController = new AuthController()
 export default authController

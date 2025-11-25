@@ -8,7 +8,7 @@ import { DepartmentRepository } from 'src/repository/admin/specialty.repo'
 import { AuthRepository } from 'src/repository/auth/auth.repository'
 import { ScheduleRepository } from 'src/repository/schedule/schedule.repo'
 import { ResultsReturned } from 'src/utils/results-api'
-import { filterSlotsByDate } from './helper'
+import { filterSlotsByDate, mergeAllSlotsWithOverride, SlotConfig } from './helper'
 
 export class ScheduleService {
   private scheduleRepo = new ScheduleRepository()
@@ -205,17 +205,22 @@ export class ScheduleService {
         )
     }
 
-    await this.scheduleRepo.deleteMany(Number(dto.doctorId))
+    const data = await this.scheduleRepo.findScheduleDoctorId(
+      Number(dto.doctorId),
+      Number(dto.departmentId),
+      Number(dto.facilityId)
+    )
 
-    // Tạo lịch
-    const created = await this.scheduleRepo.create(dto)
+    const slotsOld = data?.slots ? (typeof data.slots === 'string' ? JSON.parse(data.slots) : data.slots) : {}
+
+    await this.scheduleRepo.upsert(dto, slotsOld)
 
     return res.status(httpStatusCode.CREATED).json(
       new ResultsReturned({
         isSuccess: true,
         status: httpStatusCode.CREATED,
-        message: 'Tạo lịch thành công',
-        data: created
+        message: 'Lưu lịch thành công',
+        data: slotsOld
       })
     )
   }
@@ -347,7 +352,10 @@ export class ScheduleService {
         isSuccess: true,
         status: httpStatusCode.OK,
         message: 'Lấy chi tiết lịch theo ngày cho bác sĩ thành công',
-        data: filterSlotsByDate(slots, date)
+        data: {
+          id: data?.id ?? null,
+          schedule: !data ? [] : filterSlotsByDate(slots, date)
+        }
       })
     )
   }

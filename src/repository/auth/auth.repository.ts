@@ -3,6 +3,7 @@ import { prisma } from 'src/config/database.config'
 import { YES_NO_FLAG_VALUE, YesNoFlagKey } from 'src/constants/enums'
 import { UserStatus } from 'src/constants/user_roles'
 import { RegisterDto } from 'src/dtos/auth/register.dto'
+import { UpdateUserDto } from 'src/dtos/auth/update-user.dto'
 import { hasPassword } from 'src/utils/crypto'
 
 export class AuthRepository {
@@ -135,6 +136,9 @@ export class AuthRepository {
         is_supper_admin: true,
         is_update_profile: true,
         user_status: true,
+        cccd: true,
+        bhyt: true,
+        occupation: true,
         createdAt: true,
         updatedAt: true,
         roles: {
@@ -233,6 +237,27 @@ export class AuthRepository {
       where: { userId: data.id }, // 🧩 cần unique index userId
       update: { token: data.token, expiresAt: data.expiresAt },
       create: { userId: data.id, token: data.token, expiresAt: data.expiresAt, type: data.type }
+    })
+  }
+
+  async updateUserByUuid(uuid: string, data: UpdateUserDto): Promise<User> {
+    return prisma.user.update({
+      where: { uuid },
+      data: {
+        fullName: data.fullName,
+        phone: data.phone,
+        gender: data.gender,
+        dateOfBirth: data.birthday ? new Date(data.birthday) : undefined,
+        address: data.address,
+        cccd: data.cccd,
+        bhyt: data.healthInsurance,
+        nation: data.nation,
+        avatar: data.avatar,
+        remark: data.remark,
+        practice_certificate: data.practice_certificate,
+        is_update_profile: 'YES',
+        occupation: data.occupation
+      }
     })
   }
 }

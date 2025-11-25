@@ -2,7 +2,7 @@ import { TOKEN_EXPIRES, YES_NO_FLAG_MAP, YES_NO_FLAG_VALUE } from 'src/constants
 import { RegisterDto } from 'src/dtos/auth/register.dto'
 import { AuthRepository } from 'src/repository/auth/auth.repository'
 import { signToken, verifyToken } from 'src/utils/jwt'
-import { Response } from 'express'
+import { Request, Response } from 'express'
 import { ResultsReturned } from 'src/utils/results-api'
 import { httpStatusCode } from 'src/constants/httpStatus'
 import { TokenDto } from 'src/dtos/auth/token.dto'
@@ -13,6 +13,7 @@ import { comparePassword, decryptObject, encryptObject } from 'src/utils/crypto'
 import { EmailDto } from 'src/dtos/auth/email.dto'
 import { UserStatus } from '@prisma/client'
 import { FacilityDto } from 'src/dtos/auth/select-facility.dto'
+import { UpdateUserDto } from 'src/dtos/auth/update-user.dto'
 
 config()
 export class AuthService {
@@ -322,6 +323,36 @@ export class AuthService {
 
   resetPassword = async (dto: EmailDto, res: Response) => {}
 
+  updateUser = async (req: Request, res: Response) => {
+    const accessToken = req.cookies['access_token']
+
+    const decoded_access = await this.decodeAccessToken(accessToken)
+
+    const user = await this.authRepo.findUserByUuid(decoded_access.sub)
+
+    if (!user) {
+      res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy người dùng',
+          data: null
+        })
+      )
+    }
+
+    await this.authRepo.updateUserByUuid(decoded_access.sub, req.body)
+
+    return res.status(httpStatusCode.OK).json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Cập nhật thông tin thành công',
+        data: null
+      })
+    )
+  }
+
   getMe = async (
     cookies: {
       access_token: string
@@ -373,8 +404,6 @@ export class AuthService {
     })
 
     const infoFacility = decryptObject(cookies.if)
-
-    console.log('infoFacility', infoFacility)
 
     return res.status(httpStatusCode.OK).json(
       new ResultsReturned({

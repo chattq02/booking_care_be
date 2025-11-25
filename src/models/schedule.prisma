@@ -9,17 +9,18 @@ enum ScheduleType {
 }
 
 enum ScheduleStatus {
-  NORMAL    // Lịch bình thường, bác sĩ khám theo slots
-  OFF       // Lịch nghỉ
-  FIXED     // Lịch cố định (định kỳ)
+  NORMAL // Lịch bình thường, bác sĩ khám theo slots
+  OFF // Lịch nghỉ
+  FIXED // Lịch cố định (định kỳ)
 }
+
 model Schedule {
-  id           Int       @id @default(autoincrement()) // Khóa chính
+  id           Int            @id @default(autoincrement()) // Khóa chính
   doctorId     Int? // FK: Bác sĩ phụ trách
   facilityId   Int? // FK: Cơ sở y tế
   departmentId Int? // FK: Khoa/phòng
   date         DateTime? // Ngày làm việc cụ thể (null nếu là lịch tuần định kỳ)
-  slots        Json // Mảng các ca giờ [{dayOfWeek, startTime, endTime, price}]
+  slots        Json     @default("[]")// Mảng các ca giờ [{dayOfWeek, startTime, endTime, price}]
   type         ScheduleType // Loại lịch (doctor, department, facility)
   status       ScheduleStatus @default(NORMAL) // Trạng thái lịch
 

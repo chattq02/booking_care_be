@@ -1,6 +1,7 @@
 import { Prisma, Schedule, ScheduleType } from '@prisma/client'
 import { prisma } from 'src/config/database.config'
 import { CreateScheduleDto } from 'src/dtos/schedule/create.dto'
+import { mergeAllSlotsWithOverride, SlotConfig } from 'src/services/schedule/helper'
 
 interface FindManyParams {
   Id: number
@@ -53,13 +54,37 @@ export class ScheduleRepository {
     })
   }
 
-  async create(dto: CreateScheduleDto): Promise<Schedule> {
-    return prisma.schedule.create({
-      data: {
-        ...dto,
-        slots: JSON.stringify(dto.slots)
-      }
-    })
+  async upsert(dto: CreateScheduleDto & { id?: number }, slotsOld: SlotConfig[]): Promise<Schedule> {
+    const baseData = {
+      type: dto.type,
+      slots: JSON.stringify(mergeAllSlotsWithOverride(slotsOld, dto.slots as any) || []),
+      status: dto.status
+    }
+
+    const relationData = {
+      ...(dto.departmentId && { department: { connect: { id: dto.departmentId } } }),
+      ...(dto.doctorId && { doctor: { connect: { id: dto.doctorId } } }),
+      ...(dto.facilityId && { facility: { connect: { id: dto.facilityId } } })
+    }
+
+    if (dto.id) {
+      // For update, chỉ cần truyền các field cần update
+      return prisma.schedule.update({
+        where: { id: dto.id },
+        data: {
+          ...baseData,
+          ...relationData
+        }
+      })
+    } else {
+      // For create, truyền đầy đủ data
+      return prisma.schedule.create({
+        data: {
+          ...baseData,
+          ...relationData
+        }
+      })
+    }
   }
 
   async update(id: number | null, dto: CreateScheduleDto): Promise<Schedule> {

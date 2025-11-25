@@ -60,6 +60,7 @@ model User {
   user_status          UserStatus      @default(InActive)
   created_by           Int? // Người tạo
   academicTitleId      Int? // FK: Id của học vị / chức danh
+  occupation           String?          @db.VarChar(255) //  nghề nghiệp
 
   academicTitle         AcademicTitle?    @relation(fields: [academicTitleId], references: [id], onDelete: Restrict)
   facilities            MedicalFacility[] @relation("FacilityDoctors")

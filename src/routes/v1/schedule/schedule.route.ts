@@ -49,7 +49,7 @@ protectedWithRoles.get(
 
 /**
  * @openapi
- * /v1/schedule/create:
+ * /v1/schedule/save:
  *   post:
  *     tags:
  *       - Schedule
@@ -62,6 +62,9 @@ protectedWithRoles.get(
  *             type: object
  *             properties:
  *               doctorId:
+ *                 type: number
+ *                 example: 1
+ *               id:
  *                 type: number
  *                 example: 1
  *               facilityId:
@@ -103,7 +106,7 @@ protectedWithRoles.get(
  *         description: Lịch được tạo thành công
  */
 protectedWithRoles.post(
-  '/create',
+  '/save',
   ['ADMIN'],
   validateDto(CreateScheduleDto),
   wrapRequestHandler(scheduleController.createSchedule)
