@@ -220,7 +220,7 @@ export class ScheduleService {
         isSuccess: true,
         status: httpStatusCode.CREATED,
         message: 'Lưu lịch thành công',
-        data: slotsOld
+        data: null
       })
     )
   }

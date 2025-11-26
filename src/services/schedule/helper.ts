@@ -63,8 +63,9 @@ export const filterSlotsByDateSelected = (slots: SlotConfig[], targetDate: strin
 
 // Phiên bản nâng cao: Merge và ghi đè các ngày trùng nhau
 export const mergeAllSlotsWithOverride = (oldSlots: SlotConfig[], newSlots: SlotConfig[]): SlotConfig[] => {
+  const date = new Date().toISOString().split('T')[0]
   const mergedConfig: SlotConfig = {
-    id: 'e7445157-f97c-49b5-bb2f-939840f92f42', // Thêm ID mặc định
+    id: date, // Thêm ID mặc định
     configName: 'Cấu hình 1',
     workStartTime: '00:00',
     workEndTime: '07:00',
@@ -78,21 +79,22 @@ export const mergeAllSlotsWithOverride = (oldSlots: SlotConfig[], newSlots: Slot
   const dateMap = new Map<string, DaySchedule>()
   const allSelectedDates = new Set<string>()
 
-  // Xử lý oldSlots trước
-  oldSlots.forEach((slot) => {
-    slot.daySchedules.forEach((schedule) => {
-      dateMap.set(schedule.date, schedule)
-      allSelectedDates.add(schedule.date)
-    })
+  if (oldSlots && oldSlots.length > 0) {
+    oldSlots.forEach((slot) => {
+      slot.daySchedules.forEach((schedule) => {
+        dateMap.set(schedule.date, schedule)
+        allSelectedDates.add(schedule.date)
+      })
 
-    Object.assign(mergedConfig, {
-      configName: slot.configName,
-      workStartTime: slot.workStartTime,
-      workEndTime: slot.workEndTime,
-      slotDuration: slot.slotDuration,
-      price: slot.price
+      Object.assign(mergedConfig, {
+        configName: slot.configName,
+        workStartTime: slot.workStartTime,
+        workEndTime: slot.workEndTime,
+        slotDuration: slot.slotDuration,
+        price: slot.price
+      })
     })
-  })
+  }
 
   // Xử lý newSlots sau (ghi đè các ngày trùng)
   newSlots.forEach((slot) => {
