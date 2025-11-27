@@ -6,7 +6,7 @@ import { DoctorRepository } from 'src/repository/doctor/doctor.repository'
 import { ScheduleRepository } from 'src/repository/schedule/schedule.repo'
 
 import { ResultsReturned } from 'src/utils/results-api'
-import { filterSlotsByDate, filterSlotsByDateSelected } from '../schedule/helper'
+import { filterSlotsByDateSelected } from '../schedule/helper'
 
 config()
 
@@ -97,7 +97,7 @@ export class DoctorService {
 
     const data = await this.scheduleRepo.findScheduleDoctorId(Number(doctorId))
 
-    const slots = data?.slots ? (typeof data.slots === 'string' ? JSON.parse(data.slots) : data.slots) : {}
+    const slots = data?.slots ? (typeof data.slots === 'string' ? JSON.parse(data.slots) : data.slots) : []
 
     return res.status(httpStatusCode.OK).json(
       new ResultsReturned({

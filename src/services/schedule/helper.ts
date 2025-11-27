@@ -39,7 +39,7 @@ export const filterSlotsByDate = (slots: SlotConfig[], targetDate: string): Slot
 
 export const filterSlotsByDateSelected = (slots: SlotConfig[], targetDate: string): SlotConfig[] => {
   const filteredSlots = slots
-    .map((slot) => {
+    ?.map((slot) => {
       const filteredDaySchedules = slot.daySchedules
         .filter((day) => day.date === targetDate)
         .map((day) => {

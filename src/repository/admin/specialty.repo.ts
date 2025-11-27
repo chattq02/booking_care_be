@@ -148,6 +148,8 @@ export class DepartmentRepository {
           phone: true,
           user_type: true,
           avatar: true,
+          address: true,
+          academicTitle: true,
           schedules: {
             select: {
               slots: true,

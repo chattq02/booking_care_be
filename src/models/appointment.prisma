@@ -10,16 +10,24 @@ enum AppointmentStatus {
   CANCELED // Đã hủy
 }
 
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+}
+
 model Appointment {
   id   Int    @id @default(autoincrement()) // Khóa chính
   uuid String @unique @default(uuid()) // Mã định danh duy nhất
 
-  doctorId   Int // FK: Id của bác sĩ (User có role=DOCTOR)
-  patientId  Int // FK: Id của bệnh nhân (User có role=PATIENT)
-  scheduleId Int // FK: Id của ca khám (Schedule)
-
-  status AppointmentStatus @default(PENDING) // Trạng thái của lịch khám
-  note   String? // Ghi chú thêm từ bệnh nhân / bác sĩ
+  doctorId      Int // FK: Id của bác sĩ (User có role=DOCTOR)
+  patientId     Int // FK: Id của bệnh nhân (User có role=PATIENT)
+  scheduleId    Int // FK: Id của ca khám (Schedule)
+  paymentStatus PaymentStatus     @default(UNPAID)
+  attachments   Json?
+  paymentAmount Float?
+  status        AppointmentStatus @default(PENDING) // Trạng thái của lịch khám
+  note          String? // Ghi chú thêm từ bệnh nhân / bác sĩ
 
   // Quan hệ
   doctor       User          @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: Cascade)
