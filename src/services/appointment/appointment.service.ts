@@ -1,19 +1,24 @@
 import { config } from 'dotenv'
 import { Request, Response } from 'express'
 import { httpStatusCode } from 'src/constants/httpStatus'
-import { CreateAppointmentDto } from 'src/dtos/appointment/create.dto'
+import { CreateAppointmentDto, ICreateAppointmentReq } from 'src/dtos/appointment/create.dto'
 import { AppointmentRepository } from 'src/repository/appointment/appointment.repo'
 import { DoctorRepository } from 'src/repository/doctor/doctor.repository'
+import { ScheduleRepository } from 'src/repository/schedule/schedule.repo'
 import { ResultsReturned } from 'src/utils/results-api'
+import { findSlotById, setBlockForSlot } from './helper'
+import { AppointmentStatus, PaymentStatus } from '@prisma/client'
+import { decryptObject } from 'src/utils/crypto'
 
 config()
 
 export class AppointmentService {
   private appointmentRepo = new AppointmentRepository()
   private doctorRepo = new DoctorRepository()
+  private scheduleRepo = new ScheduleRepository()
 
   // Tạo cuộc hẹn mới
-  createAppointment = async (body: CreateAppointmentDto, res: Response) => {
+  createAppointment = async (body: CreateAppointmentDto, res: Response, req: Request) => {
     const doctor = await this.doctorRepo.getDoctorById(Number(body.doctorId))
     if (!doctor) {
       return res.status(httpStatusCode.NOT_FOUND).json(
@@ -25,13 +30,88 @@ export class AppointmentService {
         })
       )
     }
-    const appointment = await this.appointmentRepo.create(body)
+
+    const scheduleDoctor = await this.scheduleRepo.findScheduleDoctorId(Number(body.doctorId))
+
+    const slots = scheduleDoctor?.slots
+      ? typeof scheduleDoctor.slots === 'string'
+        ? JSON.parse(scheduleDoctor.slots)
+        : scheduleDoctor.slots
+      : []
+
+    const slotSelected = findSlotById(slots, body.slotId)
+    const infoUser = decryptObject(req.cookies.iu)
+
+    if (!slotSelected) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy thông tin lịch hẹn',
+          data: null
+        })
+      )
+    }
+
+    const dataCreate = {
+      doctorId: Number(body.doctorId),
+      patientId: Number(infoUser?.id),
+      scheduleId: Number(scheduleDoctor?.id),
+      facilityId: Number(scheduleDoctor?.facilityId), // THÊM facilityId
+      status: AppointmentStatus.PENDING,
+      note: body.note,
+      paymentStatus: PaymentStatus.UNPAID,
+      paymentAmount: Number(slotSelected?.price || 0),
+      appointmentDate: slotSelected?.date as string,
+      slot: slotSelected?.slot
+    }
+
+    const patientAlreadyBooked = await this.appointmentRepo.checkPatientAlreadyBooked({
+      patientId: Number(infoUser?.id),
+      slotId: body.slotId
+    })
+
+    if (patientAlreadyBooked) {
+      return res.status(httpStatusCode.BAD_REQUEST).json(
+        new ResultsReturned({
+          isSuccess: true,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'Bạn đã đặt khung giờ này rồi',
+          data: null
+        })
+      )
+    }
+    const slotTaken = await this.appointmentRepo.checkSlotTaken({
+      doctorId: Number(body.doctorId),
+      slotId: body.slotId
+    })
+
+    if (slotTaken) {
+      return res.status(httpStatusCode.BAD_REQUEST).json(
+        new ResultsReturned({
+          isSuccess: true,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'Khung giờ này đã có người đặt',
+          data: null
+        })
+      )
+    }
+
+    const dataSchedule = {
+      ...scheduleDoctor,
+      slots: setBlockForSlot(slots, body.slotId)
+    }
+
+    await this.scheduleRepo.update(scheduleDoctor?.id as number, dataSchedule as any, Number(body.doctorId))
+
+    await this.appointmentRepo.create(dataCreate as ICreateAppointmentReq)
+
     return res.status(httpStatusCode.CREATED).json(
       new ResultsReturned({
         isSuccess: true,
         status: httpStatusCode.CREATED,
         message: 'Tạo cuộc hẹn thành công',
-        data: appointment
+        data: null
       })
     )
   }

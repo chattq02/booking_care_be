@@ -6,7 +6,7 @@ class AppointmentController {
 
   // Tạo cuộc hẹn mới
   createAppointmentController = async (req: Request, res: Response) => {
-    return this.appointmentService.createAppointment(req.body, res)
+    return this.appointmentService.createAppointment(req.body, res, req)
   }
 
   // Lấy danh sách cuộc hẹn (có thể filter theo doctorId, patientId, status, date...)

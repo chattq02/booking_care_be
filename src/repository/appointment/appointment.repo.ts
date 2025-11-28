@@ -1,17 +1,23 @@
-import { Prisma, Appointment, AppointmentStatus } from '@prisma/client'
+import { Prisma, Appointment, AppointmentStatus, PaymentStatus } from '@prisma/client'
 import { prisma } from 'src/config/database.config'
+import { ICreateAppointmentReq } from 'src/dtos/appointment/create.dto'
 import { UpdateAppointmentDto } from 'src/dtos/appointment/update.dto'
 
 export class AppointmentRepository {
   // Tạo cuộc hẹn mới
-  async create(data: any): Promise<Appointment> {
+  async create(data: ICreateAppointmentReq): Promise<Appointment> {
     return prisma.appointment.create({
       data: {
         doctorId: data.doctorId,
         patientId: data.patientId,
         scheduleId: data.scheduleId,
+        facilityId: data.facilityId, // THÊM facilityId
         status: data.status ?? AppointmentStatus.PENDING,
-        note: data.note
+        note: data.note,
+        paymentStatus: data.paymentStatus ?? PaymentStatus.UNPAID,
+        paymentAmount: data.paymentAmount,
+        appointmentDate: data.appointmentDate,
+        slot: JSON.stringify(data.slot)
       }
     })
   }
@@ -85,5 +91,43 @@ export class AppointmentRepository {
       where: { patientId },
       orderBy: { createdAt: 'desc' }
     })
+  }
+
+  // Hàm check slot đã được đặt
+  async checkSlotTaken(params: { doctorId: number; slotId: string }): Promise<boolean> {
+    const { doctorId, slotId } = params
+
+    const exists = await prisma.appointment.findFirst({
+      where: {
+        doctorId,
+        status: {
+          in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED]
+        },
+        slot: {
+          string_contains: slotId
+        }
+      }
+    })
+
+    return !!exists // true = đã có người đặt
+  }
+
+  //Hàm check bệnh nhân đặt lại đúng slot mình đã đặt
+  async checkPatientAlreadyBooked(params: { patientId: number; slotId: string }): Promise<boolean> {
+    const { patientId, slotId } = params
+
+    const exists = await prisma.appointment.findFirst({
+      where: {
+        patientId,
+        status: {
+          in: [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED]
+        },
+        slot: {
+          string_contains: slotId
+        }
+      }
+    })
+
+    return !!exists
   }
 }

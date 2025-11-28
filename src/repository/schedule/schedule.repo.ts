@@ -87,11 +87,11 @@ export class ScheduleRepository {
     }
   }
 
-  async update(id: number | null, dto: CreateScheduleDto): Promise<Schedule> {
+  async update(id: number | null, dto: CreateScheduleDto, doctorId?: number): Promise<Schedule> {
     const safeId = id && id > 0 ? id : -1
 
     return prisma.schedule.upsert({
-      where: { id: safeId },
+      where: { id: safeId, ...(doctorId !== undefined && { doctorId }) },
       update: {
         ...dto,
         slots: JSON.stringify(dto.slots)

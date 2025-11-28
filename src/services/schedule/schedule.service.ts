@@ -8,7 +8,7 @@ import { DepartmentRepository } from 'src/repository/admin/specialty.repo'
 import { AuthRepository } from 'src/repository/auth/auth.repository'
 import { ScheduleRepository } from 'src/repository/schedule/schedule.repo'
 import { ResultsReturned } from 'src/utils/results-api'
-import { filterSlotsByDate, mergeAllSlotsWithOverride, SlotConfig } from './helper'
+import { filterSlotsByDate } from './helper'
 
 export class ScheduleService {
   private scheduleRepo = new ScheduleRepository()

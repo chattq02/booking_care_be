@@ -2,6 +2,8 @@ export interface SlotTime {
   startTime: string
   endTime: string
   selected: boolean
+  isBlock: boolean
+  id: string
 }
 
 export interface DaySchedule {
