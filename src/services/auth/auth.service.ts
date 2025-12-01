@@ -218,7 +218,9 @@ export class AuthService {
       roles: user.roles.map((val) => val.role),
       user_status: user.user_status,
       is_supper_admin: user.is_supper_admin,
-      id: user.id
+      id: user.id,
+      email: user.email,
+      name: user.fullName
     }
 
     res.cookie('iu', encryptObject(infoUser), {
@@ -394,7 +396,9 @@ export class AuthService {
       roles: user?.roles.map((val) => val.role),
       user_status: user?.user_status,
       is_supper_admin: user?.is_supper_admin,
-      id: user?.id
+      id: user?.id,
+      email: user?.email,
+      name: user?.fullName
     }
 
     res.cookie('iu', encryptObject(infoUser), {

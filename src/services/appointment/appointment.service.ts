@@ -9,6 +9,7 @@ import { ResultsReturned } from 'src/utils/results-api'
 import { findSlotById, setBlockForSlot } from './helper'
 import { AppointmentStatus, PaymentStatus } from '@prisma/client'
 import { decryptObject } from 'src/utils/crypto'
+import { sendAppointmentConfirmationEmail } from 'src/utils/email'
 
 config()
 
@@ -105,6 +106,19 @@ export class AppointmentService {
     await this.scheduleRepo.update(scheduleDoctor?.id as number, dataSchedule as any, Number(body.doctorId))
 
     await this.appointmentRepo.create(dataCreate as ICreateAppointmentReq)
+
+    sendAppointmentConfirmationEmail(infoUser.email, {
+      customerName: infoUser.name,
+      departmentName: doctor.departments.map((item) => item.name).join(', '),
+      appointmentDate: slotSelected.date,
+      appointmentTime: `${slotSelected.slot.startTime} - ${slotSelected.slot.endTime}`,
+      location: doctor.facilities.map((item) => item.name).join(', '),
+      staffName: doctor.fullName,
+      companyAddress: doctor.facilities.map((item) => item.address)[0] ?? '',
+      companyEmail: doctor.facilities.map((item) => item.email)[0] ?? '',
+      companyPhone: doctor.facilities.map((item) => item.phone)[0] ?? '',
+      companyName: doctor.facilities.map((item) => item.name)[0] ?? ''
+    })
 
     return res.status(httpStatusCode.CREATED).json(
       new ResultsReturned({
@@ -229,27 +243,97 @@ export class AppointmentService {
   }
 
   // Lấy tất cả cuộc hẹn của bác sĩ theo doctorId
-  getAppointmentsByDoctor = async (doctorId: number, res: Response) => {
-    const appointments = await this.appointmentRepo.findMany({ doctorId })
+  getAppointmentsByDoctor = async (req: Request, res: Response) => {
+    const { doctorId, page = 1, per_page = 10, appointmentDate, status } = req.query
+    const skip = (Number(page) - 1) * Number(per_page)
+    const infoUser = decryptObject(req.cookies.iu)
+
+    const { data, total } = await this.appointmentRepo.findMany({
+      doctorId: doctorId ? Number(doctorId) : Number(infoUser.id),
+      status: status as AppointmentStatus,
+      appointmentDate: appointmentDate as string,
+      skip: Number(skip),
+      take: Number(per_page)
+    })
     return res.status(httpStatusCode.OK).json(
       new ResultsReturned({
         isSuccess: true,
         status: httpStatusCode.OK,
-        message: 'Lấy danh sách cuộc hẹn của bác sĩ thành công',
-        data: appointments
+        message: 'Lấy danh sách cuộc hẹn thành công',
+        data: {
+          current_page: Number(page),
+          data,
+          next_page_url: '',
+          prev_page_url: '',
+          path: '',
+          per_page: Number(per_page),
+          to: Math.min(Number(skip) + Number(per_page), total),
+          total
+        }
       })
     )
   }
 
   // Lấy tất cả cuộc hẹn của bệnh nhân theo patientId
-  getAppointmentsByPatient = async (patientId: number, res: Response) => {
-    const appointments = await this.appointmentRepo.findMany({ patientId })
+  getAppointmentsByPatient = async (req: Request, res: Response) => {
+    const { patientId, page = 1, per_page = 10 } = req.query
+    const skip = (Number(page) - 1) * Number(per_page)
+    const infoUser = decryptObject(req.cookies.iu)
+
+    const { data, total } = await this.appointmentRepo.findMany({
+      patientId: patientId ? Number(patientId) : Number(infoUser.id),
+      skip: Number(skip),
+      take: Number(per_page)
+    })
+
     return res.status(httpStatusCode.OK).json(
       new ResultsReturned({
         isSuccess: true,
         status: httpStatusCode.OK,
-        message: 'Lấy danh sách cuộc hẹn của bệnh nhân thành công',
-        data: appointments
+        message: 'Lấy danh sách cuộc hẹn thành công',
+        data: {
+          current_page: Number(page),
+          data,
+          next_page_url: '',
+          prev_page_url: '',
+          path: '',
+          per_page: Number(per_page),
+          to: Math.min(Number(skip) + Number(per_page), total),
+          total
+        }
+      })
+    )
+  }
+
+  // cập nhật trạng thái cuộc hẹn
+  updateStatusAppointment = async (req: Request, res: Response) => {
+    const { id } = req.params
+    const { status } = req.body
+
+    const appointment = await this.appointmentRepo.findById(Number(id))
+
+    if (!appointment) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy cuộc hẹn',
+          data: null
+        })
+      )
+    }
+
+    await this.appointmentRepo.changeStatus({
+      id: Number(id),
+      status
+    })
+
+    return res.status(httpStatusCode.OK).json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.NOT_FOUND,
+        message: 'Thay đổi trạng thái thành công',
+        data: null
       })
     )
   }

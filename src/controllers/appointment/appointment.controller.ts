@@ -31,12 +31,17 @@ class AppointmentController {
 
   // Lấy tất cả cuộc hẹn của bác sĩ
   getAppointmentsByDoctorController = async (req: Request, res: Response) => {
-    return this.appointmentService.getAppointmentsByDoctor(Number(req.params.doctorId), res)
+    return this.appointmentService.getAppointmentsByDoctor(req, res)
   }
 
   // Lấy tất cả cuộc hẹn của bệnh nhân
   getAppointmentsByPatientController = async (req: Request, res: Response) => {
-    return this.appointmentService.getAppointmentsByPatient(Number(req.params.patientId), res)
+    return this.appointmentService.getAppointmentsByPatient(req, res)
+  }
+
+  // cập nhật trạng thái cuộc hẹn
+  updateAppointmentStatusController = async (req: Request, res: Response) => {
+    return this.appointmentService.updateStatusAppointment(req, res)
   }
 }
 

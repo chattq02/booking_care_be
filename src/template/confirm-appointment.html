@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác nhận đặt lịch hẹn</title>
+    <style>
+        /* Reset CSS */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .info-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #4a6ee0;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .info-item {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            width: 120px;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 15px;
+            background-color: #fff9e6;
+            border: 1px solid #ffd166;
+            border-radius: 5px;
+            margin: 20px 0;
+            color: #e6a700;
+        }
+        
+        .next-steps {
+            margin-top: 30px;
+        }
+        
+        .next-steps h2 {
+            color: #4a6ee0;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .steps {
+            list-style-type: none;
+        }
+        
+        .steps li {
+            margin-bottom: 15px;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .steps li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4a6ee0;
+            font-weight: bold;
+        }
+        
+        .footer {
+            background-color: #f0f2f5;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .contact-info {
+            margin-top: 15px;
+        }
+        
+        .btn {
+            display: inline-block;
+            background-color: #4a6ee0;
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-weight: 600;
+        }
+        
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .info-item {
+                flex-direction: column;
+            }
+            
+            .info-label {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        
+        <div class="content">
+            <p>Kính gửi Quý khách <strong>{{CUSTOMER_NAME}}</strong>,</p>
+            
+            <p>Chúng tôi đã nhận được yêu cầu đặt lịch hẹn của bạn. Thông tin chi tiết về lịch hẹn như sau:</p>
+            
+            <div class="info-box">
+                <div class="info-item">
+                    <span class="info-label">Khoa:</span>
+                    <span>{{DEPARTMENT_NAME}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Ngày hẹn:</span>
+                    <span>{{APPOINTMENT_DATE}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Giờ hẹn:</span>
+                    <span>{{APPOINTMENT_TIME}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Địa điểm:</span>
+                    <span>{{LOCATION}}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Người phụ trách:</span>
+                    <span>{{STAFF_NAME}}</span>
+                </div>
+            </div>
+            
+            <div class="status">
+                <strong>Lịch hẹn của bạn đang chờ xác nhận</strong>
+                <p>Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận lịch hẹn.</p>
+            </div>
+            
+            <div class="next-steps">
+                <h2>Những bước tiếp theo</h2>
+                <ul class="steps">
+                    <li>Chúng tôi sẽ xem xét lịch hẹn của bạn và xác nhận trong vòng 24 giờ.</li>
+                    <li>Bạn sẽ nhận được email xác nhận khi lịch hẹn đã được duyệt.</li>
+                    <li>Nếu có bất kỳ thay đổi nào, vui lòng liên hệ với chúng tôi sớm nhất có thể.</li>
+                </ul>
+            </div>
+            
+            <p>Nếu bạn có bất kỳ câu hỏi nào hoặc cần thay đổi lịch hẹn, vui lòng liên hệ với chúng tôi.</p>
+        </div>
+        
+        <div class="footer">
+            <p>Trân trọng,<br><strong>{{COMPANY_NAME}}</strong></p>
+            
+            <div class="contact-info">
+                <p>Điện thoại: {{COMPANY_PHONE}} | Email: {{COMPANY_EMAIL}}</p>
+                <p>Địa chỉ: {{COMPANY_ADDRESS}}</p>
+            </div>
+            
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                Đây là email tự động, vui lòng không trả lời email này.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

@@ -27,23 +27,60 @@ export class AppointmentRepository {
     doctorId?: number
     patientId?: number
     status?: AppointmentStatus
+    appointmentDate?: string
     skip?: number
     take?: number
   }): Promise<{ data: Appointment[]; total: number }> {
-    const { doctorId, patientId, status, skip, take } = params
+    const { doctorId, patientId, status, skip, take, appointmentDate } = params
 
     const where: Prisma.AppointmentWhereInput = {}
 
     if (doctorId) where.doctorId = doctorId
     if (patientId) where.patientId = patientId
     if (status) where.status = status
+    if (appointmentDate) where.appointmentDate = appointmentDate
 
     const [data, total] = await prisma.$transaction([
       prisma.appointment.findMany({
         where,
         skip,
         take,
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          doctor: {
+            select: { id: true, fullName: true, avatar: true }
+          },
+          status: true,
+          appointmentDate: true,
+          slot: true,
+          patient: {
+            select: {
+              id: true,
+              fullName: true,
+              avatar: true,
+              phone: true,
+              bhyt: true,
+              gender: true,
+              address: true,
+              cccd: true
+            }
+          },
+          note: true,
+          createdAt: true,
+          updatedAt: true,
+          uuid: true,
+          facility: {
+            select: { id: true, name: true, address: true }
+          },
+          paymentStatus: true,
+          paymentAmount: true,
+          doctorId: true,
+          patientId: true,
+          scheduleId: true,
+          attachments: true,
+          facilityId: true
+        }
       }),
       prisma.appointment.count({ where })
     ])
@@ -129,5 +166,19 @@ export class AppointmentRepository {
     })
 
     return !!exists
+  }
+
+  // hàm thay đổi trạng thái cuộc hẹn
+  async changeStatus(params: { id: number; status: AppointmentStatus }) {
+    const { id, status } = params
+
+    await prisma.appointment.update({
+      where: {
+        id
+      },
+      data: {
+        status
+      }
+    })
   }
 }

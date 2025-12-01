@@ -1,6 +1,9 @@
 import appointmentController from 'src/controllers/appointment/appointment.controller'
 import { CreateAppointmentDto } from 'src/dtos/appointment/create.dto'
+import { GetListAppointmentByDoctorQueryDto } from 'src/dtos/appointment/get-list-by-doctor.dto'
+import { GetListAppointmentByPatientQueryDto } from 'src/dtos/appointment/get-list-by-patient.dto'
 import { GetListAppointmentQueryDto } from 'src/dtos/appointment/getList.dto'
+import { UpdateAppointmentStatusDto } from 'src/dtos/appointment/update-status.dto'
 import { UpdateAppointmentDto } from 'src/dtos/appointment/update.dto'
 import { validateDto } from 'src/middlewares/validatorDTO.middleware'
 import { wrapRequestHandler } from 'src/utils/handlers'
@@ -214,6 +217,110 @@ protectedRoute.get(
 protectedRoute.get(
   '/appointment/patient/:patientId',
   wrapRequestHandler(appointmentController.getAppointmentsByPatientController)
+)
+
+/**
+ * @swagger
+ * /v1/user/my-appointment:
+ *   get:
+ *     summary: Lấy danh sách lịch hẹn của tôi
+ *     tags: [User]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: per_page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: Thành công
+ */
+protectedRoute.get(
+  '/my-appointment',
+  validateDto(GetListAppointmentByPatientQueryDto),
+  wrapRequestHandler(appointmentController.getAppointmentsByPatientController)
+)
+
+/**
+ * @swagger
+ * /v1/user/appointment-doctor:
+ *   get:
+ *     summary: Lấy danh sách cuộc hẹn của bác sĩ
+ *     tags: [Appointment]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: per_page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *       - in: query
+ *         name: appointmentDate
+ *         schema:
+ *           type: string
+ *           default: "2023-10-10"
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           default: "PENDING"
+ *           enum: [PENDING, CONFIRMED, COMPLETED, CANCELED]
+ *     responses:
+ *       200:
+ *         description: Lấy thành công
+ */
+protectedRoute.get(
+  '/appointment-doctor',
+  validateDto(GetListAppointmentByDoctorQueryDto),
+  wrapRequestHandler(appointmentController.getAppointmentsByDoctorController)
+)
+
+/**
+ * @swagger
+ * /v1/user/appointment/{id}/status:
+ *   put:
+ *     summary: Cập nhật trạng thái cuộc hẹn
+ *     tags: [Appointment]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID của cuộc hẹn
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [status]
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [CONFIRMED, COMPLETED, CANCELED]
+ *                 example: CONFIRMED
+ *     responses:
+ *       200:
+ *         description: Cập nhật trạng thái thành công
+ *       404:
+ *         description: Không tìm thấy cuộc hẹn
+ */
+protectedRoute.put(
+  '/appointment/:id/status',
+  validateDto(UpdateAppointmentStatusDto),
+  wrapRequestHandler(appointmentController.updateAppointmentStatusController)
 )
 
 export default appointment_routes
