@@ -47,9 +47,62 @@
         .info-label {
             font-weight: 600;
             width: 120px;
+            min-width: 120px;
         }
         
-        .status {
+        /* Trạng thái CONFIRMED */
+        .status-confirmed {
+            text-align: center;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border: 1px solid #4caf50;
+            border-radius: 5px;
+            margin: 20px 0;
+            color: #2e7d32;
+        }
+        
+        .status-confirmed strong {
+            display: block;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        
+        /* Trạng thái CANCELED */
+        .status-canceled {
+            text-align: center;
+            padding: 15px;
+            background-color: #ffebee;
+            border: 1px solid #f44336;
+            border-radius: 5px;
+            margin: 20px 0;
+            color: #c62828;
+        }
+        
+        .status-canceled strong {
+            display: block;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        
+        /* Trạng thái COMPLETED */
+        .status-completed {
+            text-align: center;
+            padding: 15px;
+            background-color: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 5px;
+            margin: 20px 0;
+            color: #1565c0;
+        }
+        
+        .status-completed strong {
+            display: block;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        
+        /* Trạng thái mặc định (PENDING) */
+        .status-pending {
             text-align: center;
             padding: 15px;
             background-color: #fff9e6;
@@ -59,32 +112,10 @@
             color: #e6a700;
         }
         
-        .next-steps {
-            margin-top: 30px;
-        }
-        
-        .next-steps h2 {
-            color: #4a6ee0;
-            margin-bottom: 15px;
-            font-size: 20px;
-        }
-        
-        .steps {
-            list-style-type: none;
-        }
-        
-        .steps li {
-            margin-bottom: 15px;
-            padding-left: 25px;
-            position: relative;
-        }
-        
-        .steps li:before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: #4a6ee0;
-            font-weight: bold;
+        .status-pending strong {
+            display: block;
+            font-size: 18px;
+            margin-bottom: 8px;
         }
         
         .footer {
@@ -110,6 +141,20 @@
             font-weight: 600;
         }
         
+        .remark-box {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border-left: 3px solid #4a6ee0;
+        }
+        
+        .remark-box h3 {
+            color: #4a6ee0;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
         @media only screen and (max-width: 600px) {
             .content {
                 padding: 20px;
@@ -132,11 +177,10 @@
 </head>
 <body>
     <div class="email-container">
-        
         <div class="content">
             <p>Kính gửi Quý khách <strong>{{CUSTOMER_NAME}}</strong>,</p>
             
-            <p>Chúng tôi đã nhận được yêu cầu đặt lịch hẹn của bạn. Thông tin chi tiết về lịch hẹn như sau:</p>
+            <p>Thông tin chi tiết về trạng thái lịch hẹn của bạn như sau:</p>
             
             <div class="info-box">
                 <div class="info-item">
@@ -161,21 +205,9 @@
                 </div>
             </div>
             
-            <div class="status">
-                <strong>Lịch hẹn của bạn đang chờ xác nhận</strong>
-                <p>Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận lịch hẹn.</p>
-            </div>
+            {{STATUS_SECTION}}
             
-            <div class="next-steps">
-                <h2>Những bước tiếp theo</h2>
-                <ul class="steps">
-                    <li>Chúng tôi sẽ xem xét lịch hẹn của bạn và xác nhận trong vòng 24 giờ.</li>
-                    <li>Bạn sẽ nhận được email xác nhận khi lịch hẹn đã được duyệt.</li>
-                    <li>Nếu có bất kỳ thay đổi nào, vui lòng liên hệ với chúng tôi sớm nhất có thể.</li>
-                </ul>
-            </div>
-            
-            <p>Nếu bạn có bất kỳ câu hỏi nào hoặc cần thay đổi lịch hẹn, vui lòng liên hệ với chúng tôi.</p>
+            {{REMARK_SECTION}}
         </div>
         
         <div class="footer">

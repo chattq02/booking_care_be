@@ -13,7 +13,6 @@ import { comparePassword, decryptObject, encryptObject } from 'src/utils/crypto'
 import { EmailDto } from 'src/dtos/auth/email.dto'
 import { UserStatus } from '@prisma/client'
 import { FacilityDto } from 'src/dtos/auth/select-facility.dto'
-import { UpdateUserDto } from 'src/dtos/auth/update-user.dto'
 
 config()
 export class AuthService {

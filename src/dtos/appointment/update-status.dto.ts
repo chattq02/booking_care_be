@@ -1,5 +1,5 @@
 // src/dtos/appointment/update-status.dto.ts
-import { IsEnum, IsNotEmpty, IsNumber } from 'class-validator'
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator'
 import { AppointmentStatus } from '@prisma/client'
 import { Type } from 'class-transformer'
 
@@ -12,4 +12,8 @@ export class UpdateAppointmentStatusDto {
   @Type(() => Number)
   @IsNumber({}, { message: 'id lịch hẹn khám phải là số' })
   id!: number
+
+  @IsOptional()
+  @IsString({ message: 'Lý do phải là chuỗi' })
+  remark?: string
 }

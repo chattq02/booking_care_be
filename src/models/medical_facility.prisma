@@ -28,12 +28,12 @@ model MedicalFacility {
   // Quan hệ
   parent        MedicalFacility?  @relation("SubFacilities", fields: [parentId], references: [id], onDelete: Cascade)
   subFacilities MedicalFacility[] @relation("SubFacilities")
-  
-  departments   Department[]
-  doctors       User[]            @relation("FacilityDoctors")
-  schedules     Schedule[]        @relation("FacilitySchedules")
-  userRoles     UserRole[]
-  appointments  Appointment[]     // THÊM MỚI: Quan hệ với lịch hẹn
+
+  departments  Department[]
+  doctors      User[]        @relation("FacilityDoctors")
+  schedules    Schedule[]    @relation("FacilitySchedules")
+  userRoles    UserRole[]
+  appointments Appointment[] // THÊM MỚI: Quan hệ với lịch hẹn
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

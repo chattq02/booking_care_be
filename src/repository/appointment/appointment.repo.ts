@@ -79,7 +79,8 @@ export class AppointmentRepository {
           patientId: true,
           scheduleId: true,
           attachments: true,
-          facilityId: true
+          facilityId: true,
+          remark: true
         }
       }),
       prisma.appointment.count({ where })
@@ -169,15 +170,16 @@ export class AppointmentRepository {
   }
 
   // hàm thay đổi trạng thái cuộc hẹn
-  async changeStatus(params: { id: number; status: AppointmentStatus }) {
-    const { id, status } = params
+  async changeStatus(params: { id: number; status: AppointmentStatus; remark: string }) {
+    const { id, status, remark } = params
 
     await prisma.appointment.update({
       where: {
         id
       },
       data: {
-        status
+        status,
+        ...(status === 'CANCELED' && { remark: remark })
       }
     })
   }

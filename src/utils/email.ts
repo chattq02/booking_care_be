@@ -41,6 +41,8 @@ interface AppointmentData {
   companyPhone: string
   companyAddress: string
   companyEmail: string
+  status?: 'CONFIRMED' | 'CANCELED' | 'COMPLETED'
+  remark?: string
 }
 
 export const sendAppointmentConfirmationEmail = async (toAddress: string, appointmentData: AppointmentData) => {
@@ -87,6 +89,113 @@ export const sendAppointmentConfirmationEmail = async (toAddress: string, appoin
     return info.messageId
   } catch (error) {
     console.error('Lỗi khi gửi email xác nhận đặt lịch:', error)
+    throw error
+  }
+}
+
+export const sendAppointmentConfirmationStatusEmail = async (toAddress: string, appointmentData: AppointmentData) => {
+  try {
+    // Đọc template email
+    let appointmentTemplate = fs.readFileSync(path.resolve('src/template/confirm-status-appointment.html'), 'utf8')
+
+    // Xử lý trạng thái
+    let statusSection = ''
+    let subject = 'Thông báo lịch hẹn'
+
+    switch (appointmentData.status) {
+      case 'CONFIRMED':
+        statusSection = `
+          <div class="status-confirmed">
+            <strong>✓ Lịch hẹn của bạn đã được xác nhận</strong>
+            <p>Lịch hẹn của bạn đã được xác nhận thành công. Vui lòng đến đúng giờ hẹn.</p>
+          </div>
+        `
+        subject = 'Xác nhận lịch hẹn thành công'
+        break
+
+      case 'CANCELED':
+        statusSection = `
+          <div class="status-canceled">
+            <strong>✗ Lịch hẹn đã bị hủy</strong>
+            <p>Lịch hẹn của bạn đã bị hủy. Vui lòng liên hệ chúng tôi nếu có thắc mắc.</p>
+          </div>
+        `
+        subject = 'Thông báo hủy lịch hẹn'
+        break
+
+      case 'COMPLETED':
+        statusSection = `
+          <div class="status-completed">
+            <strong>✓ Lịch hẹn đã hoàn thành</strong>
+            <p>Lịch hẹn của bạn đã được hoàn thành. Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi.</p>
+          </div>
+        `
+        subject = 'Lịch hẹn đã hoàn thành'
+        break
+
+      default:
+        statusSection = `
+          <div class="status-pending">
+            <strong>⏳ Lịch hẹn của bạn đang chờ xác nhận</strong>
+            <p>Chúng tôi sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận lịch hẹn.</p>
+          </div>
+        `
+        subject = 'Thông báo đặt lịch hẹn'
+        break
+    }
+
+    // Xử lý ghi chú
+    let remarkSection = ''
+    if (appointmentData.remark) {
+      remarkSection = `
+        <div class="remark-box">
+          <h3>Ghi chú:</h3>
+          <p>${appointmentData.remark}</p>
+        </div>
+      `
+    }
+
+    // Thay thế các placeholder bằng dữ liệu thực tế
+    appointmentTemplate = appointmentTemplate
+      .replace(/{{CUSTOMER_NAME}}/g, appointmentData.customerName)
+      .replace(/{{DEPARTMENT_NAME}}/g, appointmentData.departmentName)
+      .replace(/{{APPOINTMENT_DATE}}/g, appointmentData.appointmentDate)
+      .replace(/{{APPOINTMENT_TIME}}/g, appointmentData.appointmentTime)
+      .replace(/{{LOCATION}}/g, appointmentData.location)
+      .replace(/{{STAFF_NAME}}/g, appointmentData.staffName || 'Sẽ được thông báo sau')
+      .replace(/{{COMPANY_NAME}}/g, appointmentData.companyName)
+      .replace(/{{COMPANY_PHONE}}/g, appointmentData.companyPhone ?? '---')
+      .replace(/{{COMPANY_EMAIL}}/g, appointmentData.companyEmail ?? '---')
+      .replace(/{{COMPANY_ADDRESS}}/g, appointmentData.companyAddress ?? '---')
+      .replace(/{{FE_BASE_URL}}/g, process.env.FE_BASE_URL_DOCTOR || process.env.FE_BASE_URL || '')
+      .replace(/{{STATUS_SECTION}}/g, statusSection)
+      .replace(/{{REMARK_SECTION}}/g, remarkSection)
+
+    // Tạo transporter
+    const transporter = nodemailer.createTransport({
+      host: process.env.MAIL_HOST,
+      port: Number(process.env.MAIL_PORT),
+      secure: false,
+      auth: {
+        user: String(process.env.EMAIL_USERNAME),
+        pass: String(process.env.EMAIL_PASSWORD)
+      }
+    })
+
+    // Gửi email
+    const info = await transporter.sendMail({
+      from: `"${process.env.COMPANY_NAME || 'Hệ thống Booking Care'}" <${String(process.env.EMAIL_USERNAME)}>`,
+      to: toAddress,
+      subject: subject,
+      text: `Thông tin lịch hẹn của bạn đã được cập nhật. Vui lòng kiểm tra email để biết thêm chi tiết.`,
+      html: appointmentTemplate,
+      attachments: []
+    })
+
+    console.log(`Email thông báo lịch hẹn đã được gửi: ${info.messageId}`)
+    return info.messageId
+  } catch (error) {
+    console.error('Lỗi khi gửi email thông báo lịch hẹn:', error)
     throw error
   }
 }

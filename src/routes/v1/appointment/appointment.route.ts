@@ -254,6 +254,11 @@ protectedRoute.get(
  *     tags: [Appointment]
  *     parameters:
  *       - in: query
+ *         name: keyword
+ *         schema:
+ *           type: string
+ *           default: "...."
+ *       - in: query
  *         name: page
  *         schema:
  *           type: integer
@@ -311,6 +316,9 @@ protectedRoute.get(
  *                 type: string
  *                 enum: [CONFIRMED, COMPLETED, CANCELED]
  *                 example: CONFIRMED
+ *               remark:
+ *                 type: string
+ *                 example: lý do
  *     responses:
  *       200:
  *         description: Cập nhật trạng thái thành công

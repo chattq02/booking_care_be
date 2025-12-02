@@ -9,7 +9,8 @@ import { ResultsReturned } from 'src/utils/results-api'
 import { findSlotById, setBlockForSlot } from './helper'
 import { AppointmentStatus, PaymentStatus } from '@prisma/client'
 import { decryptObject } from 'src/utils/crypto'
-import { sendAppointmentConfirmationEmail } from 'src/utils/email'
+import { sendAppointmentConfirmationEmail, sendAppointmentConfirmationStatusEmail } from 'src/utils/email'
+import { AuthRepository } from 'src/repository/auth/auth.repository'
 
 config()
 
@@ -17,6 +18,7 @@ export class AppointmentService {
   private appointmentRepo = new AppointmentRepository()
   private doctorRepo = new DoctorRepository()
   private scheduleRepo = new ScheduleRepository()
+  private authRepo = new AuthRepository()
 
   // Tạo cuộc hẹn mới
   createAppointment = async (body: CreateAppointmentDto, res: Response, req: Request) => {
@@ -308,7 +310,7 @@ export class AppointmentService {
   // cập nhật trạng thái cuộc hẹn
   updateStatusAppointment = async (req: Request, res: Response) => {
     const { id } = req.params
-    const { status } = req.body
+    const { status, remark } = req.body
 
     const appointment = await this.appointmentRepo.findById(Number(id))
 
@@ -323,15 +325,58 @@ export class AppointmentService {
       )
     }
 
+    const doctor = await this.doctorRepo.getDoctorById(Number(appointment.doctorId))
+    if (!doctor) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy thông tin bác sĩ',
+          data: null
+        })
+      )
+    }
+
+    const infoUser = await this.authRepo.findById(appointment.patientId)
+
+    if (!infoUser) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy thông tin người dùng',
+          data: null
+        })
+      )
+    }
+
+    const slotSelected = JSON.parse(appointment.slot as string)
+
+    sendAppointmentConfirmationStatusEmail(infoUser.email, {
+      customerName: infoUser.fullName,
+      departmentName: doctor.departments.map((item) => item.name).join(', '),
+      appointmentDate: appointment.appointmentDate,
+      appointmentTime: `${slotSelected.startTime} - ${slotSelected.endTime}`,
+      location: doctor.facilities.map((item) => item.name).join(', '),
+      staffName: doctor.fullName,
+      companyAddress: doctor.facilities.map((item) => item.address)[0] ?? '',
+      companyEmail: doctor.facilities.map((item) => item.email)[0] ?? '',
+      companyPhone: doctor.facilities.map((item) => item.phone)[0] ?? '',
+      companyName: doctor.facilities.map((item) => item.name)[0] ?? '',
+      remark: remark,
+      status: status
+    })
+
     await this.appointmentRepo.changeStatus({
       id: Number(id),
-      status
+      status,
+      remark
     })
 
     return res.status(httpStatusCode.OK).json(
       new ResultsReturned({
         isSuccess: true,
-        status: httpStatusCode.NOT_FOUND,
+        status: httpStatusCode.OK,
         message: 'Thay đổi trạng thái thành công',
         data: null
       })
