@@ -16,7 +16,7 @@ model MedicalFacility {
   phone       String?               @db.VarChar(100)
   email       String?               @db.VarChar(255)
   website     String?               @db.VarChar(255)
-  description String?               @db.VarChar(1000)
+  description String?
   province    String?               @db.VarChar(255)
   district    String?               @db.VarChar(255)
   ward        String?               @db.VarChar(255)

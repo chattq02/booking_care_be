@@ -91,14 +91,17 @@ export class MedicalFacilityService {
       )
     }
 
-    await this.medicalFacilityRepo.create(dto)
+    const facilityNew = await this.medicalFacilityRepo.create(dto)
 
     return res.status(httpStatusCode.CREATED).json(
       new ResultsReturned({
         isSuccess: true,
         status: httpStatusCode.CREATED,
         message: 'Tạo cơ sở y tế thành công',
-        data: null
+        data: {
+          id: facilityNew.id,
+          name: facilityNew.name
+        }
       })
     )
   }

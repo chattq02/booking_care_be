@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString, IsBoolean } from 'class-validator'
+import { MedicalFacilityStatus } from '@prisma/client'
+import { IsNotEmpty, IsNumber, IsOptional, IsString, IsBoolean, IsEnum } from 'class-validator'
 
 /**
  * 🟢 DTO: Tạo cơ sở y tế
@@ -40,6 +41,6 @@ export class CreateMedicalFacilityDto {
   imageUrl?: string
 
   @IsOptional()
-  @IsBoolean({ message: 'Trạng thái phải là kiểu boolean' })
-  isActive?: boolean
+  @IsEnum(MedicalFacilityStatus)
+  isActive?: MedicalFacilityStatus
 }

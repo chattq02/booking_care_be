@@ -42,9 +42,13 @@ export class MedicalFacilityRepository {
       data: {
         name: data.name.trim(),
         address: data.address?.trim() ?? undefined,
+        email: data.email,
+        code: data.code,
         phone: data.phone?.trim() ?? undefined,
         description: data.description ?? undefined,
-        imageUrl: data.imageUrl ?? undefined
+        imageUrl: data.imageUrl ?? undefined,
+        isActive: data.isActive ?? undefined,
+        website: data.website
       }
     })
   }
@@ -58,7 +62,9 @@ export class MedicalFacilityRepository {
         address: data.address?.trim() ?? undefined,
         phone: data.phone?.trim() ?? undefined,
         description: data.description ?? undefined,
-        imageUrl: data.imageUrl ?? undefined
+        imageUrl: data.imageUrl ?? undefined,
+        isActive: data.isActive ?? undefined,
+        website: data.website
       }
     })
   }
