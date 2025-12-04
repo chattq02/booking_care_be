@@ -41,9 +41,9 @@ const { router: medicine_routes, protectedRoute, publicRoute, protectedWithRoles
  *               price:
  *                 type: integer
  *                 example: 10000
- *               isActive:
- *                 type: boolean
- *                 example: true
+ *               facilityId:
+ *                 type: integer
+ *                 example: 10000
  *     responses:
  *       201:
  *         description: Tạo thuốc thành công

@@ -20,7 +20,6 @@ export class MedicineService {
       skip,
       take: Number(per_page)
     })
-
     const baseUrl = `${process.env.API_BASE_URL}/v1/medicine`
 
     const next_page_url = skip + Number(per_page) < total ? `${baseUrl}?page=${page + 1}&per_page=${per_page}` : null
@@ -96,7 +95,8 @@ export class MedicineService {
       unit: dto.unit,
       manufacturer: dto.manufacturer,
       price: dto.price,
-      isActive: dto.isActive ?? true
+      isActive: dto.isActive ?? true,
+      facilityId: dto.facilityId
     })
 
     return res.status(httpStatusCode.CREATED).json(

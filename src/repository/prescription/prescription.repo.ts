@@ -61,7 +61,8 @@ export class PrescriptionRepository {
             dosage: item.dosage,
             quantity: item.quantity,
             usageInstruction: item.usageInstruction,
-            medicineId: item.medicineId
+            medicineId: item.medicineId,
+            medicineName: item.medicineName ?? undefined
           }))
         }
       },

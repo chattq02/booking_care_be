@@ -1,9 +1,15 @@
-import { IsNotEmpty, IsString, IsOptional, IsInt, Min, IsNumber, IsBoolean } from 'class-validator'
+import { Type } from 'class-transformer'
+import { IsNotEmpty, IsString, IsOptional, IsInt, Min, IsNumber, IsBoolean, isNumber } from 'class-validator'
 
 export class CreateMedicineDto {
   @IsNotEmpty()
   @IsString()
   name!: string
+
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsNumber()
+  facilityId!: number
 
   @IsOptional()
   @IsString()

@@ -9,13 +9,6 @@ export class MedicineRepository {
   findMany = async (filter: any) => {
     const where: any = {}
 
-    if (filter.name) {
-      where.name = {
-        contains: filter.name,
-        mode: 'insensitive'
-      }
-    }
-
     const [data, total] = await Promise.all([
       prisma.medicine.findMany({
         where,
@@ -56,7 +49,8 @@ export class MedicineRepository {
         name: dto.name,
         description: dto.description,
         unit: dto.unit,
-        price: dto.price
+        price: dto.price,
+        facilityId: Number(dto.facilityId)
       }
     })
   }
@@ -71,7 +65,8 @@ export class MedicineRepository {
         ...(dto.name !== undefined && { name: dto.name }),
         ...(dto.description !== undefined && { description: dto.description }),
         ...(dto.unit !== undefined && { unit: dto.unit }),
-        ...(dto.price !== undefined && { price: dto.price })
+        ...(dto.price !== undefined && { price: dto.price }),
+        ...(dto.manufacturer !== undefined && { manufacturer: dto.manufacturer })
       }
     })
   }
