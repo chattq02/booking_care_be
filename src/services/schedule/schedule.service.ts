@@ -1,4 +1,4 @@
-import { Response } from 'express'
+import { Request, Response } from 'express'
 import { httpStatusCode } from 'src/constants/httpStatus'
 import { CreateScheduleDto } from 'src/dtos/schedule/create.dto'
 import { GetListScheduleQueryDto } from 'src/dtos/schedule/get-list.dto'
@@ -226,26 +226,29 @@ export class ScheduleService {
   }
 
   // Cập nhật lịch
-  updateSchedule = async (id: number, dto: UpdateScheduleDto, res: Response) => {
-    const found = await this.scheduleRepo.findById(id)
-    if (!found)
-      return res.status(httpStatusCode.NOT_FOUND).json(
-        new ResultsReturned({
-          isSuccess: false,
-          status: httpStatusCode.NOT_FOUND,
-          message: 'Không tìm thấy lịch để cập nhật',
-          data: null
-        })
-      )
-
-    await this.scheduleRepo.update(id, dto)
+  updateSchedule = async (request: Request, res: Response) => {
+    const dto: UpdateScheduleDto = request.body
+    if (dto.id) {
+      const found = await this.scheduleRepo.findById(dto.id)
+      if (!found) {
+        return res.status(httpStatusCode.NOT_FOUND).json(
+          new ResultsReturned({
+            isSuccess: false,
+            status: httpStatusCode.NOT_FOUND,
+            message: 'Lịch không tồn tại',
+            data: null
+          })
+        )
+      }
+    }
+    await this.scheduleRepo.update(dto.id, dto)
 
     return res.status(httpStatusCode.OK).json(
       new ResultsReturned({
         isSuccess: true,
         status: httpStatusCode.OK,
         message: 'Cập nhật lịch thành công',
-        data: null
+        data: dto
       })
     )
   }

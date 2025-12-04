@@ -44,8 +44,7 @@ class ScheduleController {
 
   // Cập nhật lịch
   updateSchedule = async (req: Request, res: Response) => {
-    const { id } = req.params
-    return this.scheduleService.updateSchedule(Number(id), req.body, res)
+    return this.scheduleService.updateSchedule(req, res)
   }
 
   // Xóa lịch

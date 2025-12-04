@@ -1,0 +1,16 @@
+model Medicine {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(255) // Tên thuốc
+  description String?  @db.VarChar(1000)
+  unit        String?  @db.VarChar(100) // Đơn vị (viên, ống…)
+  price       Float?   // Giá tham khảo
+  stock       Int?     // Số lượng tồn kho (nếu quản lý kho)
+  usage       String?  @db.VarChar(1000) // Hướng dẫn sử dụng mặc định
+
+  items PrescriptionItem[] // Quan hệ: 1 thuốc → nhiều record trong đơn thuốc
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("medicines")
+}

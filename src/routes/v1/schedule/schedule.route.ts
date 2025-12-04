@@ -114,17 +114,12 @@ protectedWithRoles.post(
 
 /**
  * @openapi
- * /v1/schedule/{id}:
+ * /v1/schedule/upsert:
  *   put:
  *     tags:
  *       - Schedule
  *     summary: Cập nhật lịch
  *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
  *     requestBody:
  *       required: true
  *       content:
@@ -136,7 +131,7 @@ protectedWithRoles.post(
  *         description: Lịch được cập nhật thành công
  */
 protectedWithRoles.put(
-  '/:id',
+  '/upsert',
   ['ADMIN'],
   validateDto(UpdateScheduleDto),
   wrapRequestHandler(scheduleController.updateSchedule)

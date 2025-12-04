@@ -1,4 +1,4 @@
-import { MedicalFacilityStatus, Prisma } from '@prisma/client'
+import { MedicalFacilityStatus, Prisma, UserStatus } from '@prisma/client'
 import { Request, Response } from 'express'
 import { httpStatusCode } from 'src/constants/httpStatus'
 import { CreateMedicalFacilityDto } from 'src/dtos/medical_facility/create.dto'
@@ -213,16 +213,24 @@ export class MedicalFacilityService {
     const {
       page = 1,
       per_page = 10,
-      keyword = ''
+      keyword = '',
+      status = 'All'
     } = res.req.query as {
       page?: string
       per_page?: string
       keyword?: string
+      status: UserStatus
     }
 
     const skip = (Number(page) - 1) * Number(per_page)
 
-    const { data, total } = await this.medicalFacilityRepo.findUsersByFacility(id, keyword, skip, Number(per_page))
+    const { data, total } = await this.medicalFacilityRepo.findUsersByFacility(
+      id,
+      keyword,
+      skip,
+      Number(per_page),
+      status
+    )
 
     const baseUrl = `${process.env.API_BASE_URL}/v1/medical-facility/${id}/users`
 

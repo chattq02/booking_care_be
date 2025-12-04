@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client'
+import { Prisma, UserStatus } from '@prisma/client'
 import { prisma } from 'src/config/database.config'
 import { CreateMedicalFacilityDto } from 'src/dtos/medical_facility/create.dto'
 import { UpdateMedicalFacilityDto } from 'src/dtos/medical_facility/update.dto'
@@ -82,7 +82,13 @@ export class MedicalFacilityRepository {
   }
 
   // 👨‍⚕️ Lấy danh sách user (bác sĩ) thuộc 1 cơ sở y tế (có phân trang + tìm kiếm)
-  async findUsersByFacility(facilityId: number, keyword: string, skip: number, take: number) {
+  async findUsersByFacility(
+    facilityId: number,
+    keyword: string,
+    skip: number,
+    take: number,
+    status: UserStatus | 'All'
+  ) {
     const processedKeyword =
       keyword
         ?.normalize('NFC')
@@ -103,7 +109,8 @@ export class MedicalFacilityRepository {
                 mode: 'insensitive' as const
               }
             }
-          : {}
+          : {},
+        status && status !== 'All' ? { user_status: { equals: status as UserStatus } } : {}
       ]
     }
 
@@ -124,7 +131,8 @@ export class MedicalFacilityRepository {
           avatar: true,
           experience: true,
           academicTitle: { select: { name: true } },
-          departments: { select: { id: true, name: true, facilityId: true } }
+          departments: { select: { id: true, name: true, facilityId: true } },
+          user_status: true
         }
       }),
 
