@@ -8,6 +8,10 @@ class AuthController {
     return this.authService.register(req.body, res)
   }
 
+  registerDoctorController = async (req: Request, res: Response) => {
+    return this.authService.registerDoctor(req.body, res)
+  }
+
   loginController = async (req: Request, res: Response) => {
     return this.authService.login(req.body, res)
   }

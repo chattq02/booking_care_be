@@ -1,4 +1,5 @@
 import { Request, Response } from 'express'
+import { GetListMedicineQueryDto } from 'src/dtos/medicine/getlist.dto'
 import { MedicineService } from 'src/services/medicine/medicine.service'
 
 class MedicineController {
@@ -8,7 +9,7 @@ class MedicineController {
   // Lấy danh sách thuốc
   // ================================
   getListMedicines = async (req: Request, res: Response) => {
-    return this.medicineService.getListMedicines(req.query, res)
+    return this.medicineService.getListMedicines(req, res)
   }
 
   // ================================

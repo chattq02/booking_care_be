@@ -1,13 +1,33 @@
+import { Prisma } from '@prisma/client'
 import { prisma } from 'src/config/database.config'
 import { CreateMedicineDto } from 'src/dtos/medicine/create.dto'
 import { UpdateMedicineDto } from 'src/dtos/medicine/update.dto'
+
+interface FindManyParams {
+  facilityId: number
+  keyword?: string
+  skip?: number
+  take?: number
+}
 
 export class MedicineRepository {
   // ============================
   // LIST
   // ============================
-  findMany = async (filter: any) => {
-    const where: any = {}
+  findMany = async (filter: FindManyParams) => {
+    const where: Prisma.MedicineWhereInput = {
+      facilityId: filter.facilityId,
+      AND: [
+        filter.keyword
+          ? {
+              OR: [
+                { name: { contains: filter.keyword, mode: 'insensitive' } },
+                { manufacturer: { contains: filter.keyword, mode: 'insensitive' } }
+              ]
+            }
+          : {}
+      ]
+    }
 
     const [data, total] = await Promise.all([
       prisma.medicine.findMany({
@@ -50,7 +70,9 @@ export class MedicineRepository {
         description: dto.description,
         unit: dto.unit,
         price: dto.price,
-        facilityId: Number(dto.facilityId)
+        facilityId: Number(dto.facilityId),
+        manufacturer: dto.manufacturer,
+        stock: dto.stock
       }
     })
   }
@@ -66,7 +88,8 @@ export class MedicineRepository {
         ...(dto.description !== undefined && { description: dto.description }),
         ...(dto.unit !== undefined && { unit: dto.unit }),
         ...(dto.price !== undefined && { price: dto.price }),
-        ...(dto.manufacturer !== undefined && { manufacturer: dto.manufacturer })
+        ...(dto.manufacturer !== undefined && { manufacturer: dto.manufacturer }),
+        ...(dto.stock !== undefined && { stock: dto.stock })
       }
     })
   }

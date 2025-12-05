@@ -7,6 +7,7 @@ import { wrapRequestHandler } from 'src/utils/handlers'
 import { createRoleRouter } from 'src/utils/role-route'
 import { FacilityDto } from 'src/dtos/auth/select-facility.dto'
 import { UpdateUserDto } from 'src/dtos/auth/update-user.dto'
+import { RegisterDoctorDto } from 'src/dtos/auth/register-doctor.dto'
 
 const { router: auth_routes, protectedRoute, publicRoute, protectedWithRoles } = createRoleRouter()
 
@@ -396,4 +397,107 @@ publicRoute.post(
  *         description: Lỗi server
  */
 protectedRoute.put('/user', validateDto(UpdateUserDto), wrapRequestHandler(authController.updateUser))
+
+/**
+ * @openapi
+ * /v1/auth/register-doctor:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Đăng ký tài khoản bác sĩ
+ *     description: API dành cho Admin tạo mới tài khoản bác sĩ trong một cơ sở.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fullName:
+ *                 type: string
+ *                 example: "Nguyễn Văn Bác Sĩ"
+ *               email:
+ *                 type: string
+ *                 example: doctor@example.com
+ *               password:
+ *                 type: string
+ *                 example: Password@123
+ *               cccd:
+ *                 type: string
+ *                 example: "123456789012"
+ *               phone:
+ *                 type: string
+ *                 example: "0987654321"
+ *               gender:
+ *                 type: string
+ *                 enum: [male, female, other]
+ *                 example: "male"
+ *               specialization:
+ *                 type: string
+ *                 example: "Cardiology"
+ *               avatar:
+ *                 type: string
+ *                 example: "https://example.com/avatar.png"
+ *               facilityId:
+ *                 type: number
+ *                 example: 2
+ *     responses:
+ *       200:
+ *         description: Đăng ký bác sĩ thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Doctor registered successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: number
+ *                       example: 10
+ *                     uuid:
+ *                       type: string
+ *                       example: "230f5c0e-f2cc-4b34-981d-123456789000"
+ *                     fullName:
+ *                       type: string
+ *                       example: "Nguyễn Văn Bác Sĩ"
+ *                     email:
+ *                       type: string
+ *                       example: "doctor@example.com"
+ *                     phone:
+ *                       type: string
+ *                       example: "0987654321"
+ *                     gender:
+ *                       type: string
+ *                       example: "male"
+ *                     specialization:
+ *                       type: string
+ *                       example: "Cardiology"
+ *                     avatar:
+ *                       type: string
+ *                       example: "https://example.com/avatar.png"
+ *                     facilityId:
+ *                       type: number
+ *                       example: 2
+ *       400:
+ *         description: Dữ liệu không hợp lệ
+ *       401:
+ *         description: Không có quyền truy cập
+ *       500:
+ *         description: Lỗi server
+ */
+protectedRoute.post(
+  '/register-doctor',
+  validateDto(RegisterDoctorDto),
+  wrapRequestHandler(authController.registerDoctorController)
+)
+
 export default auth_routes

@@ -38,7 +38,7 @@ model User {
   email                String    @unique @db.VarChar(255) // Email đăng nhập (duy nhất)
   password             String    @db.VarChar(555) // Mật khẩu (đã hash) 
   fullName             String    @db.VarChar(255) // Họ và tên đầy đủ 
-  phone                String?   @unique @db.VarChar(255) // Số điện thoại (có thể trống)
+  phone                String?   @db.VarChar(255) // Số điện thoại (có thể trống)
   gender               Gender? // Giới tính (Nam/Nữ/Khác)
   dateOfBirth          DateTime? // Ngày sinh
   address              String?   @db.VarChar(555) // Địa chỉ 

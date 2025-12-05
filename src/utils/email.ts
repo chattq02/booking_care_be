@@ -199,3 +199,38 @@ export const sendAppointmentConfirmationStatusEmail = async (toAddress: string, 
     throw error
   }
 }
+
+export const sendPassword = async (name: string, toAddress: string, password: string) => {
+  try {
+    const subject = 'Thông tin mật khẩu'
+    const passwordTemplate = `
+      <p>Xin chào, ${name}</p>
+      <p> Mật khẩu mới đăng nhập hệ thống của bạn là:</p>
+      <p><strong>${password}</strong></p>`
+
+    // Tạo transporter
+    const transporter = nodemailer.createTransport({
+      host: process.env.MAIL_HOST,
+      port: Number(process.env.MAIL_PORT),
+      secure: false,
+      auth: {
+        user: String(process.env.EMAIL_USERNAME),
+        pass: String(process.env.EMAIL_PASSWORD)
+      }
+    })
+
+    // Gửi email
+    const info = await transporter.sendMail({
+      from: `"${process.env.COMPANY_NAME || 'Hệ thống Booking Care'}" <${String(process.env.EMAIL_USERNAME)}>`,
+      to: toAddress,
+      subject: subject,
+      text: `Mật khẩu của bạn đã được cấp thành công`,
+      html: passwordTemplate,
+      attachments: []
+    })
+    console.log(`Email xác nhận đặt lịch đã được gửi: ${info.messageId}`)
+  } catch (error) {
+    console.error('Lỗi khi gửi email xác nhận đặt lịch:', error)
+    throw error
+  }
+}

@@ -1,6 +1,7 @@
-import { Response } from 'express'
+import { Request, Response } from 'express'
 import { httpStatusCode } from 'src/constants/httpStatus'
 import { CreateMedicineDto } from 'src/dtos/medicine/create.dto'
+import { GetListMedicineQueryDto } from 'src/dtos/medicine/getlist.dto'
 import { UpdateMedicineDto } from 'src/dtos/medicine/update.dto'
 import { MedicineRepository } from 'src/repository/medicine/medicine.repo'
 import { ResultsReturned } from 'src/utils/results-api'
@@ -11,12 +12,13 @@ export class MedicineService {
   // =====================
   // LIST
   // =====================
-  getListMedicines = async (query: any, res: Response) => {
-    const { page = 1, per_page = 20, name } = query
+  getListMedicines = async (req: Request, res: Response) => {
+    const { page = 1, per_page = 20, keyword, facilityId } = req.query as unknown as GetListMedicineQueryDto
     const skip = (page - 1) * per_page
 
     const { data, total } = await this.medicineRepo.findMany({
-      name,
+      keyword,
+      facilityId: Number(facilityId),
       skip,
       take: Number(per_page)
     })
@@ -96,7 +98,8 @@ export class MedicineService {
       manufacturer: dto.manufacturer,
       price: dto.price,
       isActive: dto.isActive ?? true,
-      facilityId: dto.facilityId
+      facilityId: dto.facilityId,
+      stock: dto.stock ?? 1
     })
 
     return res.status(httpStatusCode.CREATED).json(

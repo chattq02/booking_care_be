@@ -1,5 +1,6 @@
 import medicineController from 'src/controllers/medicine/medicine.controller'
 import { CreateMedicineDto } from 'src/dtos/medicine/create.dto'
+import { GetListMedicineQueryDto } from 'src/dtos/medicine/getlist.dto'
 import { UpdateMedicineDto } from 'src/dtos/medicine/update.dto'
 
 import { validateDto } from 'src/middlewares/validatorDTO.middleware'
@@ -39,6 +40,9 @@ const { router: medicine_routes, protectedRoute, publicRoute, protectedWithRoles
  *                 type: string
  *                 example: "DHG Pharma"
  *               price:
+ *                 type: integer
+ *                 example: 10000
+ *               stock:
  *                 type: integer
  *                 example: 10000
  *               facilityId:
@@ -86,6 +90,9 @@ protectedRoute.post('/medicine', validateDto(CreateMedicineDto), wrapRequestHand
  *               manufacturer:
  *                 type: string
  *                 example: "Traphaco"
+ *               stock:
+ *                 type: integer
+ *                 example: 10000
  *               price:
  *                 type: integer
  *                 example: 15000
@@ -123,15 +130,25 @@ protectedRoute.put(
  *           type: integer
  *           default: 20
  *       - in: query
- *         name: name
+ *         name: keyword
  *         schema:
  *           type: string
  *           example: "Paracetamol"
+ *       - in: query
+ *         name: facilityId
+ *         schema:
+ *           type: integer
+ *           example: 1
  *     responses:
  *       200:
  *         description: Thành công
  */
-protectedWithRoles.get('/medicine', ['ADMIN', 'DOCTOR'], wrapRequestHandler(medicineController.getListMedicines))
+protectedWithRoles.get(
+  '/medicine',
+  ['ADMIN', 'DOCTOR'],
+  validateDto(GetListMedicineQueryDto),
+  wrapRequestHandler(medicineController.getListMedicines)
+)
 
 // ======================================================
 // 🟠 Lấy thuốc theo ID

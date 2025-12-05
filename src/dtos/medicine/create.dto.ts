@@ -21,12 +21,17 @@ export class CreateMedicineDto {
 
   @IsOptional()
   @IsString()
-  manufacturer?: string
+  manufacturer!: string
 
   @IsNotEmpty()
   @IsNumber()
   @Min(0)
   price!: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  @Min(1)
+  stock!: number
 
   @IsOptional()
   @IsBoolean()

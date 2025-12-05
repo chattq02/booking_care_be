@@ -6,13 +6,14 @@ import { Request, Response } from 'express'
 import { ResultsReturned } from 'src/utils/results-api'
 import { httpStatusCode } from 'src/constants/httpStatus'
 import { TokenDto } from 'src/dtos/auth/token.dto'
-import { sendVerifyRegisterEmail } from 'src/utils/email'
+import { sendPassword, sendVerifyRegisterEmail } from 'src/utils/email'
 import { LoginDto } from 'src/dtos/auth/login.dto'
 import { config } from 'dotenv'
-import { comparePassword, decryptObject, encryptObject } from 'src/utils/crypto'
+import { comparePassword, decryptObject, encryptObject, hasPassword } from 'src/utils/crypto'
 import { EmailDto } from 'src/dtos/auth/email.dto'
 import { UserStatus } from '@prisma/client'
 import { FacilityDto } from 'src/dtos/auth/select-facility.dto'
+import { RegisterDoctorDto } from 'src/dtos/auth/register-doctor.dto'
 
 config()
 export class AuthService {
@@ -136,6 +137,51 @@ export class AuthService {
     )
   }
 
+  registerDoctor = async (dto: RegisterDoctorDto, res: Response) => {
+    // 1️⃣ Kiểm tra email đã tồn tại chưa
+    const existing = await this.authRepo.findByEmail(dto.email)
+
+    if (existing) {
+      // Nếu tài khoản chưa verify
+      if (existing.is_verify === YES_NO_FLAG_VALUE['0']) {
+        return res.status(httpStatusCode.BAD_REQUEST).json(
+          new ResultsReturned({
+            isSuccess: false,
+            status: httpStatusCode.BAD_REQUEST,
+            message: 'Tài khoản đã tồn tại nhưng chưa được xác minh. Vui lòng kiểm tra email.',
+            data: null
+          })
+        )
+      }
+
+      // Nếu đã verify
+      return res.status(httpStatusCode.BAD_REQUEST).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'Email đã được sử dụng.',
+          data: null
+        })
+      )
+    }
+
+    // 2️⃣ Tạo user mới
+    await this.authRepo.createDoctor(dto)
+
+    // 4️⃣ Gửi email xác thực
+    sendPassword(dto.fullName, dto.email, dto.phone)
+
+    // 6 Trả phản hồi cho client
+    return res.status(httpStatusCode.OK).json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Đăng ký thành công! Mật khẩu đã được gửi về email',
+        data: null
+      })
+    )
+  }
+
   login = async (dto: LoginDto, res: Response) => {
     // 🔍 1. Kiểm tra email tồn tại
     const user = await this.authRepo.findByEmail(dto.email)
@@ -163,6 +209,16 @@ export class AuthService {
     }
 
     // 🔍 3. Kiểm tra có đúng mật khẩu không
+    if (user.password === '' || user.password === null || user.password === undefined) {
+      return res.status(httpStatusCode.BAD_REQUEST).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'Tài khoản chưa được tạo mật khẩu, vui lòng liên hệ quan trị viên',
+          data: null
+        })
+      )
+    }
     const isMatch = comparePassword(dto.password, user.password)
     if (!isMatch) {
       return res.status(httpStatusCode.BAD_REQUEST).json(

@@ -2,6 +2,7 @@ import { Prisma, Role, Token, TokenType, User } from '@prisma/client'
 import { prisma } from 'src/config/database.config'
 import { YES_NO_FLAG_VALUE, YesNoFlagKey } from 'src/constants/enums'
 import { UserStatus } from 'src/constants/user_roles'
+import { RegisterDoctorDto } from 'src/dtos/auth/register-doctor.dto'
 import { RegisterDto } from 'src/dtos/auth/register.dto'
 import { UpdateUserDto } from 'src/dtos/auth/update-user.dto'
 import { hasPassword } from 'src/utils/crypto'
@@ -257,6 +258,41 @@ export class AuthRepository {
         practice_certificate: data.practice_certificate,
         is_update_profile: 'YES',
         occupation: data.occupation
+      }
+    })
+  }
+
+  /**
+   * Tạo bác sĩ mới
+   */
+  async createDoctor(data: RegisterDoctorDto): Promise<User> {
+    return prisma.user.create({
+      data: {
+        fullName: data.fullName ?? '',
+        email: data.email,
+        password: hasPassword(data.phone),
+        phone: data.phone,
+        gender: data.gender,
+        cccd: data.cccd,
+        avatar: data.avatar,
+        address: data.address,
+        academicTitleId: data.academicTitleId,
+        is_verify: 'YES',
+        is_supper_admin: 'NO',
+        user_status: 'Active',
+        departments: {
+          connect: {
+            id: data.departmentId
+          }
+        },
+        roles: {
+          create: [
+            {
+              role: Role.DOCTOR,
+              facilityId: data.facilityId
+            }
+          ]
+        }
       }
     })
   }

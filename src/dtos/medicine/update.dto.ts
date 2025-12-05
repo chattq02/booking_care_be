@@ -33,6 +33,11 @@ export class UpdateMedicineDto {
   @Min(0)
   price?: number
 
+  @IsNotEmpty()
+  @IsNumber()
+  @Min(1)
+  stock!: number
+
   @IsOptional()
   @IsBoolean()
   isActive?: boolean
