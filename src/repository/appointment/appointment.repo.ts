@@ -183,4 +183,79 @@ export class AppointmentRepository {
       }
     })
   }
+
+  // REPORT APPOINTMENTS + TOTAL REVENUE (PAID ONLY)
+  async report(params: { doctorId?: number; fromDate: string; toDate: string }): Promise<{
+    total: number
+    totalRevenue: number
+    totalConfirmedPatients: number
+    totalAppointmentCancel: number
+    totalAppointmentPending: number
+  }> {
+    const { doctorId, fromDate, toDate } = params
+
+    const where: Prisma.AppointmentWhereInput = {
+      appointmentDate: {
+        gte: fromDate,
+        lte: toDate
+      }
+    }
+
+    if (doctorId) where.doctorId = doctorId
+
+    const [total, revenueResult, totalConfirmedPatients, totalAppointmentCancel, totalAppointmentPending] =
+      await prisma.$transaction([
+        // ================================
+        // 2) Tổng Lịch hẹn
+        // ================================
+        prisma.appointment.count({ where }),
+
+        // ================================
+        // 2) Tổng doanh thu (PAID)
+        // ================================
+
+        prisma.appointment.aggregate({
+          where: {
+            ...where,
+            paymentStatus: 'PAID'
+          },
+          _sum: {
+            paymentAmount: true
+          }
+        }),
+        // ================================
+        // 3) Tổng số bệnh nhân CONFIRMED
+        // ================================
+        prisma.appointment.count({
+          where: {
+            ...where,
+            status: 'CONFIRMED'
+          }
+        }),
+
+        // ================================
+        // 4) Tổng lịch hẹn bị hủy
+        // ================================
+        prisma.appointment.count({
+          where: {
+            ...where,
+            status: 'CANCELED'
+          }
+        }),
+
+        // ================================
+        // 4) Tổng lịch hẹn chờ duyệt
+        // ================================
+        prisma.appointment.count({
+          where: {
+            ...where,
+            status: 'PENDING'
+          }
+        })
+      ])
+
+    const totalRevenue = revenueResult._sum.paymentAmount ?? 0
+
+    return { total, totalRevenue, totalConfirmedPatients, totalAppointmentCancel, totalAppointmentPending }
+  }
 }

@@ -3,6 +3,7 @@ import { CreateAppointmentDto } from 'src/dtos/appointment/create.dto'
 import { GetListAppointmentByDoctorQueryDto } from 'src/dtos/appointment/get-list-by-doctor.dto'
 import { GetListAppointmentByPatientQueryDto } from 'src/dtos/appointment/get-list-by-patient.dto'
 import { GetListAppointmentQueryDto } from 'src/dtos/appointment/getList.dto'
+import { ReportAppointmentDto } from 'src/dtos/appointment/report.dto'
 import { UpdateAppointmentStatusDto } from 'src/dtos/appointment/update-status.dto'
 import { UpdateAppointmentDto } from 'src/dtos/appointment/update.dto'
 import { validateDto } from 'src/middlewares/validatorDTO.middleware'
@@ -329,6 +330,37 @@ protectedRoute.put(
   '/appointment/:id/status',
   validateDto(UpdateAppointmentStatusDto),
   wrapRequestHandler(appointmentController.updateAppointmentStatusController)
+)
+
+/**
+ * @swagger
+ * /v1/user/appointment-report:
+ *   get:
+ *     summary: Báo cáo lịch hẹn (doanh thu, tổng lịch hẹn, lọc theo bác sĩ)
+ *     tags: [Appointment]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: fromDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "2025-01-01"
+ *       - in: query
+ *         name: toDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "2025-01-31"
+ *     responses:
+ *       200:
+ *         description: Báo cáo thành công
+ */
+protectedRoute.get(
+  '/appointment-report',
+  validateDto(ReportAppointmentDto),
+  wrapRequestHandler(appointmentController.getAppointmentReportController)
 )
 
 export default appointment_routes

@@ -43,6 +43,11 @@ class AppointmentController {
   updateAppointmentStatusController = async (req: Request, res: Response) => {
     return this.appointmentService.updateStatusAppointment(req, res)
   }
+
+  // 🔥 API REPORT cuộc hẹn
+  getAppointmentReportController = async (req: Request, res: Response) => {
+    return this.appointmentService.reportAppointments(req, res)
+  }
 }
 
 const appointmentController = new AppointmentController()

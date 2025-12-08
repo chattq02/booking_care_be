@@ -11,6 +11,7 @@ import { AppointmentStatus, PaymentStatus } from '@prisma/client'
 import { decryptObject } from 'src/utils/crypto'
 import { sendAppointmentConfirmationEmail, sendAppointmentConfirmationStatusEmail } from 'src/utils/email'
 import { AuthRepository } from 'src/repository/auth/auth.repository'
+import { ReportAppointmentDto } from 'src/dtos/appointment/report.dto'
 
 config()
 
@@ -135,6 +136,17 @@ export class AppointmentService {
   // Lấy danh sách cuộc hẹn, có thể filter theo doctorId, patientId, status
   getAppointments = async (query: any, res: Response) => {
     const { doctorId, patientId, status, page = 1, per_page = 10 } = query
+    const doctor = await this.doctorRepo.getDoctorById(Number(doctorId))
+    if (!doctor) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy thông tin bác sĩ',
+          data: null
+        })
+      )
+    }
     const skip = (Number(page) - 1) * Number(per_page)
 
     const { data, total } = await this.appointmentRepo.findMany({
@@ -247,6 +259,19 @@ export class AppointmentService {
   // Lấy tất cả cuộc hẹn của bác sĩ theo doctorId
   getAppointmentsByDoctor = async (req: Request, res: Response) => {
     const { doctorId, page = 1, per_page = 10, appointmentDate, status } = req.query
+    if (doctorId) {
+      const doctor = await this.doctorRepo.getDoctorById(Number(doctorId))
+      if (!doctor) {
+        return res.status(httpStatusCode.NOT_FOUND).json(
+          new ResultsReturned({
+            isSuccess: false,
+            status: httpStatusCode.NOT_FOUND,
+            message: 'Không tìm thấy thông tin bác sĩ',
+            data: null
+          })
+        )
+      }
+    }
     const skip = (Number(page) - 1) * Number(per_page)
     const infoUser = decryptObject(req.cookies.iu)
 
@@ -279,6 +304,18 @@ export class AppointmentService {
   // Lấy tất cả cuộc hẹn của bệnh nhân theo patientId
   getAppointmentsByPatient = async (req: Request, res: Response) => {
     const { patientId, page = 1, per_page = 10 } = req.query
+
+    const existing = await this.authRepo.findById(Number(patientId))
+    if (!existing) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy thông tin bệnh nhân',
+          data: null
+        })
+      )
+    }
     const skip = (Number(page) - 1) * Number(per_page)
     const infoUser = decryptObject(req.cookies.iu)
 
@@ -379,6 +416,96 @@ export class AppointmentService {
         status: httpStatusCode.OK,
         message: 'Thay đổi trạng thái thành công',
         data: null
+      })
+    )
+  }
+
+  // ---------------- REPORT APPOINTMENT WITH DATE VALIDATION (MAX 1 MONTH) ----------------
+  reportAppointments = async (req: Request, res: Response) => {
+    const { fromDate, toDate, page = 1, per_page = 10 } = req.query as unknown as ReportAppointmentDto
+
+    const iu = req.cookies.iu
+
+    const infoUser = decryptObject(iu)
+
+    const existing = await this.authRepo.findById(Number(infoUser.id))
+    if (!existing) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy thông tin bác sĩ',
+          data: null
+        })
+      )
+    }
+
+    // Validate fromDate & toDate format
+    if (!fromDate || !toDate) {
+      return res.status(httpStatusCode.BAD_REQUEST).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'fromDate và toDate là bắt buộc',
+          data: null
+        })
+      )
+    }
+
+    const from = new Date(fromDate as string)
+    const to = new Date(toDate as string)
+
+    if (isNaN(from.getTime()) || isNaN(to.getTime())) {
+      return res.status(httpStatusCode.BAD_REQUEST).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'fromDate hoặc toDate không đúng định dạng ngày (YYYY-MM-DD)',
+          data: null
+        })
+      )
+    }
+
+    // ==============================
+    // Validate chỉ được trong 1 tháng
+    // ==============================
+
+    // Check khoảng cách 31 ngày
+    const diffMs = to.getTime() - from.getTime()
+    const diffDays = diffMs / (1000 * 60 * 60 * 24)
+
+    if (diffDays > 31) {
+      return res.status(httpStatusCode.BAD_REQUEST).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'Khoảng thời gian chỉ được phép tối đa 31 ngày',
+          data: null
+        })
+      )
+    }
+
+    const skip = (Number(page) - 1) * Number(per_page)
+
+    const { total, totalRevenue, totalConfirmedPatients, totalAppointmentCancel, totalAppointmentPending } =
+      await this.appointmentRepo.report({
+        doctorId: infoUser.id ? Number(infoUser.id) : undefined,
+        fromDate: from.toISOString(),
+        toDate: to.toISOString()
+      })
+
+    return res.status(httpStatusCode.OK).json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Lấy báo cáo cuộc hẹn thành công',
+        data: {
+          total_revenue: totalRevenue,
+          total_appointment: total,
+          total_patients: totalConfirmedPatients,
+          total_appointment_cancel: totalAppointmentCancel,
+          total_appointment_pending: totalAppointmentPending
+        }
       })
     )
   }
