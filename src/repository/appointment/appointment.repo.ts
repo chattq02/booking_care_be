@@ -26,13 +26,14 @@ export class AppointmentRepository {
   async findMany(params: {
     doctorId?: number
     patientId?: number
+    keyword?: string
     status?: AppointmentStatus
     fromDate?: string
     toDate?: string
     skip?: number
     take?: number
   }): Promise<{ data: Appointment[]; total: number }> {
-    const { doctorId, patientId, status, skip, take, fromDate, toDate } = params
+    const { doctorId, patientId, status, skip, take, fromDate, toDate, keyword } = params
     const where: Prisma.AppointmentWhereInput = {}
 
     if (doctorId) where.doctorId = doctorId
@@ -43,6 +44,78 @@ export class AppointmentRepository {
         gte: fromDate, // "2025-12-01"
         lte: toDate // "2025-12-31"
       }
+    }
+
+    if (keyword && keyword.trim() !== '') {
+      const processedKeyword = keyword.trim()
+
+      where.OR = [
+        // Tìm theo tên bác sĩ
+        {
+          doctor: {
+            fullName: {
+              contains: processedKeyword,
+              mode: 'insensitive'
+            }
+          }
+        },
+
+        // Tìm theo tên bệnh nhân
+        {
+          patient: {
+            fullName: {
+              contains: processedKeyword,
+              mode: 'insensitive'
+            }
+          }
+        },
+
+        // SĐT bệnh nhân
+        {
+          patient: {
+            phone: {
+              contains: processedKeyword,
+              mode: 'insensitive'
+            }
+          }
+        },
+
+        // CCCD bệnh nhân
+        {
+          patient: {
+            cccd: {
+              contains: processedKeyword,
+              mode: 'insensitive'
+            }
+          }
+        },
+
+        // Tìm theo facility name
+        {
+          facility: {
+            name: {
+              contains: processedKeyword,
+              mode: 'insensitive'
+            }
+          }
+        },
+
+        // Note
+        {
+          note: {
+            contains: processedKeyword,
+            mode: 'insensitive'
+          }
+        },
+
+        // UUID
+        {
+          uuid: {
+            contains: processedKeyword,
+            mode: 'insensitive'
+          }
+        }
+      ]
     }
 
     const [data, total] = await prisma.$transaction([
@@ -184,7 +257,8 @@ export class AppointmentRepository {
       },
       data: {
         status,
-        ...(status === 'CANCELED' && { remark: remark })
+        ...(status === 'CANCELED' && { remark: remark }),
+        ...(status === 'COMPLETED' && { paymentStatus: 'PAID' })
       }
     })
   }
@@ -270,8 +344,8 @@ export class AppointmentRepository {
     const appointments = await prisma.appointment.findMany({
       where: {
         doctorId,
-        appointmentDate
-        // status: { in: ['CONFIRMED'] }
+        appointmentDate,
+        status: 'CONFIRMED'
       },
       include: {
         patient: {
@@ -281,7 +355,8 @@ export class AppointmentRepository {
             phone: true,
             email: true,
             avatar: true,
-            gender: true
+            gender: true,
+            cccd: true
           }
         }
       }

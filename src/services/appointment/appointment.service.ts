@@ -258,7 +258,7 @@ export class AppointmentService {
 
   // Lấy tất cả cuộc hẹn của bác sĩ theo doctorId
   getAppointmentsByDoctor = async (req: Request, res: Response) => {
-    const { doctorId, page = 1, per_page = 10, fromDate, toDate, status } = req.query
+    const { doctorId, page = 1, per_page = 10, fromDate, toDate, status, keyword } = req.query
     if (doctorId) {
       const doctor = await this.doctorRepo.getDoctorById(Number(doctorId))
       if (!doctor) {
@@ -289,6 +289,7 @@ export class AppointmentService {
     const { data, total } = await this.appointmentRepo.findMany({
       doctorId: doctorId ? Number(doctorId) : Number(infoUser.id),
       status: status as AppointmentStatus,
+      keyword: keyword as string,
       fromDate: fromDate as string,
       toDate: toDate as string,
       skip: Number(skip),
