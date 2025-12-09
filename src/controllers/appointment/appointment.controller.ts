@@ -48,6 +48,11 @@ class AppointmentController {
   getAppointmentReportController = async (req: Request, res: Response) => {
     return this.appointmentService.reportAppointments(req, res)
   }
+
+  // 🚀 API LẤY BỆNH NHÂN HIỆN TẠI & KẾ TIẾP
+  getCurrentAndNextPatientController = async (req: Request, res: Response) => {
+    return this.appointmentService.getCurrentAndNextPatient(req, res)
+  }
 }
 
 const appointmentController = new AppointmentController()

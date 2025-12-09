@@ -4,7 +4,7 @@ import { RequestHandler } from 'express'
 // ✅ Danh sách domain được phép truy cập
 const allowedOrigins = [
   'http://doctor.localhost:5173',
-  'http://localhost:4000',
+  'http://localhost:4530',
   'http://user.localhost:5173',
   'http://admin.localhost:5173'
 ]

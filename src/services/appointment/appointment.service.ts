@@ -258,7 +258,7 @@ export class AppointmentService {
 
   // Lấy tất cả cuộc hẹn của bác sĩ theo doctorId
   getAppointmentsByDoctor = async (req: Request, res: Response) => {
-    const { doctorId, page = 1, per_page = 10, appointmentDate, status } = req.query
+    const { doctorId, page = 1, per_page = 10, fromDate, toDate, status } = req.query
     if (doctorId) {
       const doctor = await this.doctorRepo.getDoctorById(Number(doctorId))
       if (!doctor) {
@@ -274,11 +274,23 @@ export class AppointmentService {
     }
     const skip = (Number(page) - 1) * Number(per_page)
     const infoUser = decryptObject(req.cookies.iu)
+    // Validate fromDate & toDate format
+    if (!fromDate || !toDate) {
+      return res.status(httpStatusCode.BAD_REQUEST).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'fromDate và toDate là bắt buộc',
+          data: null
+        })
+      )
+    }
 
     const { data, total } = await this.appointmentRepo.findMany({
       doctorId: doctorId ? Number(doctorId) : Number(infoUser.id),
       status: status as AppointmentStatus,
-      appointmentDate: appointmentDate as string,
+      fromDate: fromDate as string,
+      toDate: toDate as string,
       skip: Number(skip),
       take: Number(per_page)
     })
@@ -485,13 +497,11 @@ export class AppointmentService {
       )
     }
 
-    const skip = (Number(page) - 1) * Number(per_page)
-
     const { total, totalRevenue, totalConfirmedPatients, totalAppointmentCancel, totalAppointmentPending } =
       await this.appointmentRepo.report({
         doctorId: infoUser.id ? Number(infoUser.id) : undefined,
-        fromDate: from.toISOString(),
-        toDate: to.toISOString()
+        fromDate: fromDate,
+        toDate: toDate
       })
 
     return res.status(httpStatusCode.OK).json(
@@ -505,6 +515,93 @@ export class AppointmentService {
           total_patients: totalConfirmedPatients,
           total_appointment_cancel: totalAppointmentCancel,
           total_appointment_pending: totalAppointmentPending
+        }
+      })
+    )
+  }
+
+  // ===================== CURRENT + NEXT PATIENT =====================
+  // appointment.service.ts
+  getCurrentAndNextPatient = async (req: Request, res: Response) => {
+    const { doctorId, appointmentDate } = req.query
+
+    const infoUser = decryptObject(req.cookies.iu)
+
+    const resolvedDoctorId = doctorId ? Number(doctorId) : Number(infoUser.id)
+    if (!resolvedDoctorId) {
+      return res.status(httpStatusCode.BAD_REQUEST).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'doctorId là bắt buộc',
+          data: null
+        })
+      )
+    }
+
+    // Validate doctor
+    const doctor = await this.doctorRepo.getDoctorById(resolvedDoctorId)
+    if (!doctor) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy thông tin bác sĩ',
+          data: null
+        })
+      )
+    }
+
+    if (!appointmentDate) {
+      return res.status(httpStatusCode.BAD_REQUEST).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'appointmentDate là bắt buộc (YYYY-MM-DD)',
+          data: null
+        })
+      )
+    }
+
+    // Lấy danh sách cuộc hẹn CONFIRMED trong ngày
+    const appointments = await this.appointmentRepo.findCurrentAndNextPatient({
+      doctorId: resolvedDoctorId,
+      appointmentDate: '2025-12-01' as string
+    })
+
+    if (appointments.length === 0) {
+      return res.status(httpStatusCode.OK).json(
+        new ResultsReturned({
+          isSuccess: true,
+          status: httpStatusCode.OK,
+          message: 'Không có bệnh nhân nào trong ngày',
+          data: {
+            currentPatient: null,
+            nextPatient: null
+          }
+        })
+      )
+    }
+
+    // Parse slot + sort theo startTime
+    const sorted = appointments
+      .map((item) => ({
+        ...item,
+        slot: JSON.parse(item.slot as string)
+      }))
+      .sort((a, b) => a.slot.startTime.localeCompare(b.slot.startTime))
+
+    const current = sorted[0] || null
+    const next = sorted[1] || null
+
+    return res.status(httpStatusCode.OK).json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Lấy thông tin bệnh nhân hiện tại và kế tiếp thành công',
+        data: {
+          current,
+          next
         }
       })
     )

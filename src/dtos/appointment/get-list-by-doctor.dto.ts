@@ -1,4 +1,4 @@
-import { IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator'
+import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator'
 import { Type } from 'class-transformer'
 import { AppointmentStatus } from '@prisma/client'
 
@@ -21,9 +21,11 @@ export class GetListAppointmentByDoctorQueryDto {
   @IsInt({ message: 'Mã bác sĩ phải là số nguyên' })
   doctorId?: number
 
-  @IsNotEmpty()
-  @IsString({ message: 'Ghi chú phải là chuỗi' })
-  appointmentDate!: string
+  @IsString({ message: 'fromDate phải là định dạng ngày hợp lệ (YYYY-MM-DD)' })
+  fromDate!: string
+
+  @IsString({ message: 'toDate phải là định dạng ngày hợp lệ (YYYY-MM-DD)' })
+  toDate!: string
 
   @IsOptional()
   @IsEnum(AppointmentStatus, { message: 'Trạng thái không hợp lệ' })

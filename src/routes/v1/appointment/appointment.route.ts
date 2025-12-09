@@ -1,5 +1,6 @@
 import appointmentController from 'src/controllers/appointment/appointment.controller'
 import { CreateAppointmentDto } from 'src/dtos/appointment/create.dto'
+import { GetCurrentAndNextPatientDto } from 'src/dtos/appointment/get-current-and-next-patient.dto'
 import { GetListAppointmentByDoctorQueryDto } from 'src/dtos/appointment/get-list-by-doctor.dto'
 import { GetListAppointmentByPatientQueryDto } from 'src/dtos/appointment/get-list-by-patient.dto'
 import { GetListAppointmentQueryDto } from 'src/dtos/appointment/getList.dto'
@@ -270,10 +271,17 @@ protectedRoute.get(
  *           type: integer
  *           default: 10
  *       - in: query
- *         name: appointmentDate
+ *         name: fromDate
+ *         required: true
  *         schema:
  *           type: string
- *           default: "2023-10-10"
+ *           example: "2025-01-01"
+ *       - in: query
+ *         name: toDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "2025-01-31"
  *       - in: query
  *         name: status
  *         schema:
@@ -361,6 +369,41 @@ protectedRoute.get(
   '/appointment-report',
   validateDto(ReportAppointmentDto),
   wrapRequestHandler(appointmentController.getAppointmentReportController)
+)
+
+/**
+ * @swagger
+ * /v1/user/appointment-current-next:
+ *   get:
+ *     summary: Lấy bệnh nhân hiện tại và bệnh nhân kế tiếp của bác sĩ trong ngày
+ *     tags: [Appointment]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: doctorId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           example: 3
+ *         description: ID của bác sĩ
+ *       - in: query
+ *         name: appointmentDate
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "2025-12-09"
+ *         description: Ngày cần kiểm tra (YYYY-MM-DD)
+ *     responses:
+ *       200:
+ *         description: Lấy thành công
+ *       400:
+ *         description: Dữ liệu không hợp lệ
+ */
+protectedRoute.get(
+  '/appointment-current-next',
+  validateDto(GetCurrentAndNextPatientDto),
+  wrapRequestHandler(appointmentController.getCurrentAndNextPatientController)
 )
 
 export default appointment_routes

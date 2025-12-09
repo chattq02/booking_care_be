@@ -27,18 +27,23 @@ export class AppointmentRepository {
     doctorId?: number
     patientId?: number
     status?: AppointmentStatus
-    appointmentDate?: string
+    fromDate?: string
+    toDate?: string
     skip?: number
     take?: number
   }): Promise<{ data: Appointment[]; total: number }> {
-    const { doctorId, patientId, status, skip, take, appointmentDate } = params
-
+    const { doctorId, patientId, status, skip, take, fromDate, toDate } = params
     const where: Prisma.AppointmentWhereInput = {}
 
     if (doctorId) where.doctorId = doctorId
     if (patientId) where.patientId = patientId
     if (status) where.status = status
-    if (appointmentDate) where.appointmentDate = appointmentDate
+    if (fromDate && toDate) {
+      where.appointmentDate = {
+        gte: fromDate, // "2025-12-01"
+        lte: toDate // "2025-12-31"
+      }
+    }
 
     const [data, total] = await prisma.$transaction([
       prisma.appointment.findMany({
@@ -257,5 +262,31 @@ export class AppointmentRepository {
     const totalRevenue = revenueResult._sum.paymentAmount ?? 0
 
     return { total, totalRevenue, totalConfirmedPatients, totalAppointmentCancel, totalAppointmentPending }
+  }
+
+  async findCurrentAndNextPatient(params: { doctorId: number; appointmentDate: string }): Promise<Appointment[]> {
+    const { doctorId, appointmentDate } = params
+
+    const appointments = await prisma.appointment.findMany({
+      where: {
+        doctorId,
+        appointmentDate
+        // status: { in: ['CONFIRMED'] }
+      },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            fullName: true,
+            phone: true,
+            email: true,
+            avatar: true,
+            gender: true
+          }
+        }
+      }
+    })
+
+    return appointments
   }
 }

@@ -9,7 +9,7 @@ import { prisma } from './config/database.config'
 
 config() // Load biến môi trường
 
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 4530
 const logger = createLogger('Main')
 
 async function bootstrap() {

@@ -9,10 +9,10 @@ export class ReportAppointmentDto {
   })
   status?: AppointmentStatus
 
-  @IsDateString({}, { message: 'fromDate phải là định dạng ngày hợp lệ (YYYY-MM-DD)' })
+  @IsString({ message: 'fromDate phải là định dạng ngày hợp lệ (YYYY-MM-DD)' })
   fromDate!: string
 
-  @IsDateString({}, { message: 'toDate phải là định dạng ngày hợp lệ (YYYY-MM-DD)' })
+  @IsString({ message: 'toDate phải là định dạng ngày hợp lệ (YYYY-MM-DD)' })
   toDate!: string
 
   @IsOptional()
