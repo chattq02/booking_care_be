@@ -1,5 +1,6 @@
 import { Prisma, Appointment, AppointmentStatus, PaymentStatus } from '@prisma/client'
 import { prisma } from 'src/config/database.config'
+import { CreateMedicalRecordDto } from 'src/dtos/appointment/create-medical-record.dto'
 import { ICreateAppointmentReq } from 'src/dtos/appointment/create.dto'
 import { UpdateAppointmentDto } from 'src/dtos/appointment/update.dto'
 
@@ -27,18 +28,21 @@ export class AppointmentRepository {
     doctorId?: number
     patientId?: number
     keyword?: string
+    paymentStatus?: PaymentStatus
     status?: AppointmentStatus
     fromDate?: string
     toDate?: string
     skip?: number
     take?: number
   }): Promise<{ data: Appointment[]; total: number }> {
-    const { doctorId, patientId, status, skip, take, fromDate, toDate, keyword } = params
+    const { doctorId, patientId, status, skip, take, fromDate, toDate, keyword, paymentStatus } = params
     const where: Prisma.AppointmentWhereInput = {}
 
     if (doctorId) where.doctorId = doctorId
     if (patientId) where.patientId = patientId
     if (status) where.status = status
+
+    if (paymentStatus) where.paymentStatus = paymentStatus
     if (fromDate && toDate) {
       where.appointmentDate = {
         gte: fromDate, // "2025-12-01"
@@ -158,7 +162,16 @@ export class AppointmentRepository {
           scheduleId: true,
           attachments: true,
           facilityId: true,
-          remark: true
+          remark: true,
+          bloodPressure: true,
+          temperature: true,
+          weight: true,
+          height: true,
+          medicalHistory: true,
+          diagnosis: true,
+          conclusion: true,
+          heartRate: true,
+          instruction: true
         }
       }),
       prisma.appointment.count({ where })
@@ -363,5 +376,177 @@ export class AppointmentRepository {
     })
 
     return appointments
+  }
+
+  // ===================== LẤY CHI TIẾT BỆNH NHÂN TRONG LỊCH HẸN =====================
+  async findPatientDetailInAppointment(appointmentId: number) {
+    return prisma.appointment.findFirst({
+      where: { id: appointmentId },
+      select: {
+        id: true,
+        uuid: true,
+        appointmentDate: true,
+        status: true,
+        paymentStatus: true,
+        paymentAmount: true,
+        createdAt: true,
+        updatedAt: true,
+        slot: true,
+        note: true,
+        remark: true,
+        medicalHistory: true,
+        // ===================== BỆNH NHÂN =====================
+        patient: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+            phone: true,
+            gender: true,
+            dateOfBirth: true,
+            cccd: true,
+            bhyt: true,
+            address: true,
+            avatar: true,
+            occupation: true,
+            nation: true
+          }
+        },
+
+        // ===================== BÁC SĨ =====================
+        doctor: {
+          select: {
+            id: true,
+            fullName: true,
+            avatar: true,
+            experience: true,
+
+            departments: {
+              select: {
+                id: true,
+                name: true
+              }
+            },
+
+            facilities: {
+              select: {
+                id: true,
+                name: true,
+                address: true,
+                phone: true,
+                email: true
+              }
+            }
+          }
+        },
+
+        // ===================== CƠ SỞ Y TẾ =====================
+        facility: {
+          select: {
+            id: true,
+            name: true,
+            address: true,
+            phone: true,
+            email: true
+          }
+        }
+      }
+    })
+  }
+
+  async updateAppointmentMedical(id: number, data: CreateMedicalRecordDto): Promise<Appointment | null> {
+    return prisma.$transaction(async (tx) => {
+      // 1. Check appointment exists
+      const appointment = await tx.appointment.findUnique({
+        where: { id }
+      })
+      if (!appointment) return null
+
+      // 2. Update appointment medical info
+      const updatedAppointment = await tx.appointment.update({
+        where: { id },
+        data: {
+          bloodPressure: data.bloodPressure,
+          heartRate: data.heartRate,
+          weight: data.weight,
+          height: data.height,
+          temperature: data.temperature,
+
+          diagnosis: data.diagnosis,
+          medicalHistory: data.medicalHistory,
+          conclusion: data.conclusion,
+          instruction: data.instruction,
+          status: 'COMPLETED',
+          paymentStatus: 'PAID'
+        }
+      })
+
+      // ==============================
+      // 3. PROCESS PRESCRIPTION
+      // ==============================
+      if (data.prescription) {
+        const pres = data.prescription
+
+        // 3.1 Check existing prescription
+        const existingPrescription = await tx.prescription.findUnique({
+          where: { appointmentId: id }
+        })
+
+        let prescriptionId: number
+
+        if (!existingPrescription) {
+          // 3.2 Create new prescription
+          const newPrescription = await tx.prescription.create({
+            data: {
+              appointmentId: id,
+              diagnosis: pres.diagnosis,
+              notes: pres.notes
+            }
+          })
+
+          prescriptionId = newPrescription.id
+        } else {
+          // 3.3 Update existing prescription
+          const updatedPres = await tx.prescription.update({
+            where: { appointmentId: id },
+            data: {
+              diagnosis: pres.diagnosis,
+              notes: pres.notes
+            }
+          })
+
+          prescriptionId = updatedPres.id
+
+          // 3.4 Delete old items before inserting new ones
+          await tx.prescriptionItem.deleteMany({
+            where: { prescriptionId }
+          })
+        }
+
+        // 3.5 Insert new Prescription Items
+        if (pres.items?.length) {
+          await tx.prescriptionItem.createMany({
+            data: pres.items.map((item) => ({
+              prescriptionId,
+              medicineId: Number(item.medicineId), // ✔ đảm bảo luôn là number
+              quantity: Number(item.quantity ?? 1), // ✔ default nếu thiếu
+              medicineName: item.name ?? null,
+              dosage: item.dosage?.toString() ?? null, // nếu là số -> convert string
+              unit: item.unit ?? null,
+              frequency: item.frequency ?? null,
+              duration: item.duration ?? null,
+              mealTime: item.mealTime ?? null,
+              instruction: item.instruction ?? null,
+              note: item.note ?? null,
+
+              startDate: item.startDate ?? null,
+              endDate: item.endDate ?? null
+            }))
+          })
+        }
+      }
+
+      return updatedAppointment
+    })
   }
 }

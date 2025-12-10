@@ -1,5 +1,7 @@
 import appointmentController from 'src/controllers/appointment/appointment.controller'
+import { CreateMedicalRecordDto } from 'src/dtos/appointment/create-medical-record.dto'
 import { CreateAppointmentDto } from 'src/dtos/appointment/create.dto'
+import { GetCompletedAndPaidAppointmentsDto } from 'src/dtos/appointment/get-completed-and-paid-appointments.dto'
 import { GetCurrentAndNextPatientDto } from 'src/dtos/appointment/get-current-and-next-patient.dto'
 import { GetListAppointmentByDoctorQueryDto } from 'src/dtos/appointment/get-list-by-doctor.dto'
 import { GetListAppointmentByPatientQueryDto } from 'src/dtos/appointment/get-list-by-patient.dto'
@@ -404,6 +406,221 @@ protectedRoute.get(
   '/appointment-current-next',
   validateDto(GetCurrentAndNextPatientDto),
   wrapRequestHandler(appointmentController.getCurrentAndNextPatientController)
+)
+
+/**
+ * @swagger
+ * /v1/user/appointment-completed-paid:
+ *   get:
+ *     summary: Lấy danh sách cuộc hẹn đã hoàn thành & đã thanh toán (có phân trang)
+ *     tags: [Appointment]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: doctorId
+ *         schema:
+ *           type: integer
+ *         description: Lọc theo bác sĩ
+ *       - in: query
+ *         name: fromDate
+ *         schema:
+ *           type: string
+ *           example: "2025-01-01"
+ *       - in: query
+ *         name: toDate
+ *         schema:
+ *           type: string
+ *           example: "2025-01-31"
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: per_page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: Lấy danh sách thành công
+ */
+protectedRoute.get(
+  '/appointment-completed-paid',
+  validateDto(GetCompletedAndPaidAppointmentsDto),
+  wrapRequestHandler(appointmentController.getCompletedAndPaidAppointmentsController)
+)
+
+/**
+ * @swagger
+ * /v1/user/appointment/patient-detail/{patientId}:
+ *   get:
+ *     summary: Lấy chi tiết bệnh nhân trong cuộc hẹn
+ *     tags: [Appointment]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: patientId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID của bệnh nhân
+ *     responses:
+ *       200:
+ *         description: Lấy thành công
+ *       404:
+ *         description: Không tìm thấy thông tin lịch hẹn hoặc bệnh nhân
+ */
+protectedRoute.get(
+  '/appointment-patient-detail-by-appointmentId/:appointmentId',
+  wrapRequestHandler(appointmentController.getPatientDetailInAppointmentController)
+)
+
+/**
+ * @swagger
+ * /v1/user/appointment-medical-record:
+ *   post:
+ *     summary: Lưu thông tin khám bệnh + đơn thuốc
+ *     tags: [Appointment]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - appointmentId
+ *             properties:
+ *               appointmentId:
+ *                 type: integer
+ *                 example: 123
+ *               bloodPressure:
+ *                 type: string
+ *                 example: "120/80"
+ *               heartRate:
+ *                 type: integer
+ *                 example: 78
+ *               weight:
+ *                 type: number
+ *                 example: 65.5
+ *               height:
+ *                 type: number
+ *                 example: 170
+ *               temperature:
+ *                 type: number
+ *                 example: 36.8
+ *               diagnosis:
+ *                 type: string
+ *                 example: "Viêm họng cấp"
+ *               medicalHistory:
+ *                 type: string
+ *                 example: "Dị ứng thời tiết"
+ *               conclusion:
+ *                 type: string
+ *                 example: "Đã ổn định"
+ *               prescription:
+ *                 type: object
+ *                 properties:
+ *                   diagnosis:
+ *                     type: string
+ *                     example: "Viêm họng cấp"
+ *                   notes:
+ *                     type: string
+ *                     example: "Uống sau ăn"
+ *                   items:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         medicineId:
+ *                           type: integer
+ *                           example: 283
+ *                         name:
+ *                           type: string
+ *                           example: "Fresh Metal Sausages 451mg"
+ *                         dosage:
+ *                           type: integer
+ *                           example: 600
+ *                         unit:
+ *                           type: string
+ *                           example: "ml"
+ *                         quantity:
+ *                           type: integer
+ *                           example: 1
+ *                         frequency:
+ *                           type: string
+ *                           example: "2 lần/ngày"
+ *                         duration:
+ *                           type: string
+ *                           example: "7 ngày"
+ *                         mealTime:
+ *                           type: string
+ *                           example: "Trong bữa ăn"
+ *                         startDate:
+ *                           type: string
+ *                           format: date
+ *                           example: "2025-12-01"
+ *                         endDate:
+ *                           type: string
+ *                           format: date
+ *                           example: "2025-12-14"
+ *                         usageInstruction:
+ *                           type: string
+ *                           example: "sssss"
+ *                         note:
+ *                           type: string
+ *                           example: "ssssss"
+ *     responses:
+ *       201:
+ *         description: Lưu thành công
+ *       400:
+ *         description: Dữ liệu không hợp lệ
+ */
+
+protectedRoute.post(
+  '/appointment-medical-record',
+  validateDto(CreateMedicalRecordDto),
+  wrapRequestHandler(appointmentController.saveMedicalRecordController)
+)
+
+/**
+ * @swagger
+ * /v1/user/appointment-patient-detail-history/{patientId}:
+ *   get:
+ *     summary: Lấy chi tiết bệnh nhân và lịch sử khám bệnh trong cuộc hẹn
+ *     tags: [Appointment]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: patientId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID của cuộc hẹn
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: per_page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: Lấy thành công chi tiết bệnh nhân và lịch sử khám bệnh
+ *       404:
+ *         description: Không tìm thấy thông tin lịch hẹn hoặc bệnh nhân
+ */
+protectedRoute.get(
+  '/appointment-patient-detail-history/:patientId',
+  wrapRequestHandler(appointmentController.getPatientDetailAndHistoryController)
 )
 
 export default appointment_routes

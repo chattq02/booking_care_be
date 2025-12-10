@@ -54,10 +54,10 @@ export const seedAppointment = async () => {
     const slot = randomSlot()
 
     return {
-      doctorId: 50, // Hoặc random doctor nếu muốn
+      doctorId: 725, // Hoặc random doctor nếu muốn
       patientId: randomPatientId(),
       facilityId: 4,
-      scheduleId: 5172,
+      scheduleId: 5359,
       appointmentDate: randomDate(),
       slot: JSON.stringify(slot), // Prisma JSON
       paymentAmount: slot.price,

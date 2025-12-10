@@ -53,6 +53,26 @@ class AppointmentController {
   getCurrentAndNextPatientController = async (req: Request, res: Response) => {
     return this.appointmentService.getCurrentAndNextPatient(req, res)
   }
+
+  // Lấy danh sách cuộc hẹn đã khám & đã thanh toán
+  getCompletedAndPaidAppointmentsController = async (req: Request, res: Response) => {
+    return this.appointmentService.getCompletedAndPaidAppointments(req, res)
+  }
+
+  // lấy chi tiết bệnh nhân trong lịch hẹn
+  getPatientDetailInAppointmentController = async (req: Request, res: Response) => {
+    return this.appointmentService.getPatientDetailInAppointment(req, res)
+  }
+
+  // Lưu thông tin khám + đơn thuốc
+  saveMedicalRecordController = async (req: Request, res: Response) => {
+    return this.appointmentService.saveMedicalRecord(req, res)
+  }
+
+  // Lấy thông tin bệnh nhân + lịch sử khám theo patientId
+  getPatientDetailAndHistoryController = async (req: Request, res: Response) => {
+    return this.appointmentService.getPatientDetailAndHistory(req, res)
+  }
 }
 
 const appointmentController = new AppointmentController()

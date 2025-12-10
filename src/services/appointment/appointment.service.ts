@@ -7,11 +7,12 @@ import { DoctorRepository } from 'src/repository/doctor/doctor.repository'
 import { ScheduleRepository } from 'src/repository/schedule/schedule.repo'
 import { ResultsReturned } from 'src/utils/results-api'
 import { findSlotById, setBlockForSlot } from './helper'
-import { AppointmentStatus, PaymentStatus } from '@prisma/client'
+import { AppointmentStatus, PaymentStatus, Prisma } from '@prisma/client'
 import { decryptObject } from 'src/utils/crypto'
 import { sendAppointmentConfirmationEmail, sendAppointmentConfirmationStatusEmail } from 'src/utils/email'
 import { AuthRepository } from 'src/repository/auth/auth.repository'
 import { ReportAppointmentDto } from 'src/dtos/appointment/report.dto'
+import { CreateMedicalRecordDto } from 'src/dtos/appointment/create-medical-record.dto'
 
 config()
 
@@ -564,10 +565,12 @@ export class AppointmentService {
       )
     }
 
+    const today = new Date().toISOString().split('T')[0]
+
     // Lấy danh sách cuộc hẹn CONFIRMED trong ngày
     const appointments = await this.appointmentRepo.findCurrentAndNextPatient({
       doctorId: resolvedDoctorId,
-      appointmentDate: '2025-12-01' as string
+      appointmentDate: today as string
     })
 
     if (appointments.length === 0) {
@@ -603,6 +606,343 @@ export class AppointmentService {
         data: {
           current,
           next
+        }
+      })
+    )
+  }
+
+  // ===================== COMPLETED + PAID APPOINTMENTS =====================
+  getCompletedAndPaidAppointments = async (req: Request, res: Response) => {
+    const { doctorId, fromDate, toDate, page = 1, per_page = 10, keyword = '' } = req.query
+
+    const infoUser = decryptObject(req.cookies.iu)
+
+    const resolvedDoctorId = doctorId ? Number(doctorId) : Number(infoUser.id)
+    if (!resolvedDoctorId) {
+      return res.status(httpStatusCode.BAD_REQUEST).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'doctorId là bắt buộc',
+          data: null
+        })
+      )
+    }
+
+    const skip = (Number(page) - 1) * Number(per_page)
+
+    // Query Repo
+    const { data: appointments } = await this.appointmentRepo.findMany({
+      doctorId: doctorId ? Number(doctorId) : Number(resolvedDoctorId),
+      keyword: keyword as string,
+      paymentStatus: PaymentStatus.PAID,
+      status: AppointmentStatus.COMPLETED,
+      fromDate: fromDate as string,
+      toDate: toDate as string,
+      skip: Number(skip),
+      take: Number(per_page)
+    })
+
+    // ===================== GROUP BY PATIENT =====================
+    const grouped = Object.values(
+      appointments.reduce((acc: any, appt: any) => {
+        const pid = appt.patient.id
+
+        if (!acc[pid]) {
+          acc[pid] = {
+            patientId: pid,
+            patient: appt.patient,
+            appointments: []
+          }
+        }
+
+        acc[pid].appointments.push({
+          id: appt.id,
+          appointmentDate: appt.appointmentDate,
+          slot: appt.slot,
+          doctor: appt.doctor,
+          paymentStatus: appt.paymentStatus,
+          status: appt.status,
+          createdAt: appt.createdAt
+        })
+
+        return acc
+      }, {})
+    )
+
+    // PHÂN TRANG SAU GROUP
+    const totalGrouped = grouped.length
+    const paginated = grouped.slice(skip, skip + Number(per_page))
+
+    const baseUrl = `${process.env.API_BASE_URL}/v1/appointment-completed-paid`
+
+    const next_page_url =
+      Number(skip) + Number(per_page) < totalGrouped
+        ? `${baseUrl}?page=${Number(page) + 1}&per_page=${Number(per_page)}`
+        : null
+
+    const prev_page_url = Number(page) > 1 ? `${baseUrl}?page=${Number(page) - 1}&per_page=${Number(per_page)}` : null
+
+    return res.status(httpStatusCode.OK).json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Lấy danh sách cuộc hẹn hoàn thành & đã thanh toán thành công',
+        data: {
+          current_page: Number(page),
+          data: paginated,
+          next_page_url,
+          prev_page_url,
+          path: baseUrl,
+          per_page: Number(per_page),
+          to: Math.min(Number(skip) + Number(per_page), totalGrouped),
+          total: totalGrouped
+        }
+      })
+    )
+  }
+
+  // ===================== PATIENT DETAIL IN APPOINTMENT =====================
+  getPatientDetailInAppointment = async (req: Request, res: Response) => {
+    const { appointmentId } = req.params
+
+    if (!appointmentId) {
+      return res.status(httpStatusCode.BAD_REQUEST).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'appointmentId là bắt buộc',
+          data: null
+        })
+      )
+    }
+
+    // Lấy thông tin bác sĩ
+    const appointmentPatient = await this.appointmentRepo.findPatientDetailInAppointment(Number(appointmentId))
+
+    if (!appointmentPatient) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy thông tin bệnh nhân',
+          data: null
+        })
+      )
+    }
+
+    // Parse slot
+    const slot = appointmentPatient.slot ? JSON.parse(appointmentPatient.slot as string) : null
+
+    const response = {
+      appointment: {
+        id: appointmentPatient.id,
+        appointmentDate: appointmentPatient.appointmentDate,
+        paymentStatus: appointmentPatient.paymentStatus,
+        status: appointmentPatient.status,
+        createdAt: appointmentPatient.createdAt,
+        slot
+      },
+      patient: {
+        id: appointmentPatient.patient.id,
+        fullName: appointmentPatient.patient.fullName,
+        email: appointmentPatient.patient.email,
+        phone: appointmentPatient.patient.phone,
+        birthday: appointmentPatient.patient.dateOfBirth,
+        gender: appointmentPatient.patient.gender,
+        avatar: appointmentPatient.patient.avatar,
+        address: appointmentPatient.patient.address,
+        cccd: appointmentPatient.patient.cccd,
+        bhyt: appointmentPatient.patient.bhyt,
+        medicalHistory: appointmentPatient.medicalHistory
+      },
+      doctor: {
+        id: appointmentPatient.doctor.id,
+        fullName: appointmentPatient.doctor.fullName,
+        departments: appointmentPatient.doctor.departments?.map((d) => d.name),
+        facilities: appointmentPatient.doctor.facilities?.map((f) => ({
+          id: f.id,
+          name: f.name,
+          address: f.address,
+          phone: f.phone,
+          email: f.email
+        }))
+      }
+    }
+
+    return res.status(httpStatusCode.OK).json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Lấy thông tin bệnh nhân trong cuộc hẹn thành công',
+        data: response
+      })
+    )
+  }
+
+  // ===================== SAVE MEDICAL RECORD =====================
+  saveMedicalRecord = async (req: Request, res: Response) => {
+    const body = req.body as CreateMedicalRecordDto
+    const { appointmentId } = body
+
+    // ===== Validate input =====
+    if (!appointmentId) {
+      return res.status(httpStatusCode.BAD_REQUEST).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'appointmentId và diagnosis là bắt buộc',
+          data: null
+        })
+      )
+    }
+
+    // ===== Get doctor from token =====
+    const iu = req.cookies.iu
+    const infoUser = decryptObject(iu)
+
+    // ===== Check appointment =====
+    const appointment = await this.appointmentRepo.findById(Number(appointmentId))
+    if (!appointment) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy cuộc hẹn',
+          data: null
+        })
+      )
+    }
+
+    // ===== Check doctor =====
+    const doctor = await this.doctorRepo.getDoctorById(Number(infoUser.id))
+    if (!doctor) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy thông tin bác sĩ',
+          data: null
+        })
+      )
+    }
+
+    // ===== Check patient =====
+    const patient = await this.authRepo.findById(appointment.patientId)
+    if (!patient) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy bệnh nhân',
+          data: null
+        })
+      )
+    }
+    await this.appointmentRepo.updateAppointmentMedical(Number(appointmentId), body)
+
+    return res.status(httpStatusCode.CREATED).json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.CREATED,
+        message: 'Lưu hồ sơ khám thành công',
+        data: body
+      })
+    )
+  }
+
+  // ===================== PATIENT DETAIL + HISTORY =====================
+  getPatientDetailAndHistory = async (req: Request, res: Response) => {
+    const { patientId } = req.params
+    const { page = 1, per_page = 10 } = req.query
+
+    if (!patientId) {
+      return res.status(httpStatusCode.BAD_REQUEST).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'patientId là bắt buộc',
+          data: null
+        })
+      )
+    }
+
+    // Lấy thông tin bệnh nhân
+    const patient = await this.authRepo.findById(Number(patientId))
+    if (!patient) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy bệnh nhân',
+          data: null
+        })
+      )
+    }
+
+    // Pagination
+    const skip = (Number(page) - 1) * Number(per_page)
+
+    // Lấy lịch sử khám của bệnh nhân
+    const { data: appointments, total } = await this.appointmentRepo.findMany({
+      patientId: Number(patientId),
+      skip: Number(skip),
+      take: Number(per_page)
+    })
+
+    // Parse slot cho mỗi cuộc hẹn
+    const parsedAppointments = appointments.map((appt: any) => ({
+      ...appt,
+      slot: appt.slot ? JSON.parse(appt.slot as string) : null,
+      doctor: {
+        id: appt.doctor.id,
+        fullName: appt.doctor.fullName,
+        departments: appt.doctor.departments?.map((d: any) => d.name),
+        facilities: appt.doctor.facilities?.map((f: any) => ({
+          id: f.id,
+          name: f.name,
+          address: f.address,
+          phone: f.phone,
+          email: f.email
+        }))
+      }
+    }))
+
+    const baseUrl = `${process.env.API_BASE_URL}/v1/patient-detail-history`
+
+    const next_page_url =
+      Number(skip) + Number(per_page) < total
+        ? `${baseUrl}?patientId=${patientId}&page=${Number(page) + 1}&per_page=${Number(per_page)}`
+        : null
+    const prev_page_url =
+      Number(page) > 1
+        ? `${baseUrl}?patientId=${patientId}&page=${Number(page) - 1}&per_page=${Number(per_page)}`
+        : null
+
+    return res.status(httpStatusCode.OK).json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Lấy thông tin bệnh nhân và lịch sử khám thành công',
+        data: {
+          patient: {
+            id: patient.id,
+            fullName: patient.fullName,
+            email: patient.email,
+            phone: patient.phone,
+            birthday: patient.dateOfBirth,
+            gender: patient.gender,
+            avatar: patient.avatar,
+            address: patient.address,
+            cccd: patient.cccd,
+            bhyt: patient.bhyt
+          },
+          appointments: parsedAppointments,
+          current_page: Number(page),
+          next_page_url,
+          prev_page_url,
+          per_page: Number(per_page),
+          total
         }
       })
     )
