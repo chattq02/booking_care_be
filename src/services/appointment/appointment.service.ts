@@ -855,6 +855,7 @@ export class AppointmentService {
   getPatientDetailAndHistory = async (req: Request, res: Response) => {
     const { patientId } = req.params
     const { page = 1, per_page = 10 } = req.query
+    const infoFacility = decryptObject(req.cookies.if)
 
     if (!patientId) {
       return res.status(httpStatusCode.BAD_REQUEST).json(
@@ -885,11 +886,11 @@ export class AppointmentService {
 
     // Lấy lịch sử khám của bệnh nhân
     const { data: appointments, total } = await this.appointmentRepo.findMany({
+      facilityId: infoFacility.id,
       patientId: Number(patientId),
       skip: Number(skip),
       take: Number(per_page)
     })
-
     // Parse slot cho mỗi cuộc hẹn
     const parsedAppointments = appointments.map((appt: any) => ({
       ...appt,
@@ -925,6 +926,7 @@ export class AppointmentService {
         status: httpStatusCode.OK,
         message: 'Lấy thông tin bệnh nhân và lịch sử khám thành công',
         data: {
+          data_history: parsedAppointments,
           patient: {
             id: patient.id,
             fullName: patient.fullName,
@@ -937,7 +939,6 @@ export class AppointmentService {
             cccd: patient.cccd,
             bhyt: patient.bhyt
           },
-          appointments: parsedAppointments,
           current_page: Number(page),
           next_page_url,
           prev_page_url,

@@ -26,6 +26,7 @@ export class AppointmentRepository {
   // Lấy danh sách cuộc hẹn, có thể filter doctorId, patientId, status, skip/take
   async findMany(params: {
     doctorId?: number
+    facilityId?: number
     patientId?: number
     keyword?: string
     paymentStatus?: PaymentStatus
@@ -35,12 +36,13 @@ export class AppointmentRepository {
     skip?: number
     take?: number
   }): Promise<{ data: Appointment[]; total: number }> {
-    const { doctorId, patientId, status, skip, take, fromDate, toDate, keyword, paymentStatus } = params
+    const { doctorId, patientId, facilityId, status, skip, take, fromDate, toDate, keyword, paymentStatus } = params
     const where: Prisma.AppointmentWhereInput = {}
 
     if (doctorId) where.doctorId = doctorId
     if (patientId) where.patientId = patientId
     if (status) where.status = status
+    if (facilityId) where.facilityId = facilityId
 
     if (paymentStatus) where.paymentStatus = paymentStatus
     if (fromDate && toDate) {
@@ -127,7 +129,7 @@ export class AppointmentRepository {
         where,
         skip,
         take,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: 'asc' },
         select: {
           id: true,
           doctor: {
@@ -171,7 +173,17 @@ export class AppointmentRepository {
           diagnosis: true,
           conclusion: true,
           heartRate: true,
-          instruction: true
+          instruction: true,
+          prescription: {
+            select: {
+              id: true,
+              diagnosis: true,
+              notes: true,
+              createdAt: true,
+              updatedAt: true,
+              items: true
+            }
+          }
         }
       }),
       prisma.appointment.count({ where })
@@ -448,6 +460,16 @@ export class AppointmentRepository {
             address: true,
             phone: true,
             email: true
+          }
+        },
+        prescription: {
+          select: {
+            id: true,
+            diagnosis: true,
+            notes: true,
+            createdAt: true,
+            updatedAt: true,
+            items: true
           }
         }
       }

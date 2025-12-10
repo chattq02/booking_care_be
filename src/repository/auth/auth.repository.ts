@@ -1,4 +1,4 @@
-import { Prisma, Role, Token, TokenType, User } from '@prisma/client'
+import { MedicalFacility, Prisma, Role, Token, TokenType, User } from '@prisma/client'
 import { prisma } from 'src/config/database.config'
 import { YES_NO_FLAG_VALUE, YesNoFlagKey } from 'src/constants/enums'
 import { UserStatus } from 'src/constants/user_roles'
@@ -23,29 +23,31 @@ export class AuthRepository {
     })
   }
 
-  async findByEmail(email: string): Promise<
-    | (Pick<
-        User,
-        | 'id'
-        | 'uuid'
-        | 'email'
-        | 'fullName'
-        | 'phone'
-        | 'gender'
-        | 'dateOfBirth'
-        | 'address'
-        | 'is_supper_admin'
-        | 'createdAt'
-        | 'updatedAt'
-        | 'is_verify'
-        | 'user_status'
-        | 'password'
-      > & {
-        roles: { role: Role }[]
-      })
-    | null
-  > {
-    const user = await prisma.user.findUnique({
+  async findByEmail(email: string): Promise<Prisma.UserGetPayload<{
+    select: {
+      id: true
+      uuid: true
+      email: true
+      fullName: true
+      phone: true
+      gender: true
+      dateOfBirth: true
+      address: true
+      is_supper_admin: true
+      createdAt: true
+      updatedAt: true
+      is_verify: true
+      user_status: true
+      password: true
+      roles: {
+        select: {
+          role: true
+        }
+      }
+      facilities: true
+    }
+  }> | null> {
+    return prisma.user.findUnique({
       where: { email },
       select: {
         id: true,
@@ -63,14 +65,11 @@ export class AuthRepository {
         user_status: true,
         password: true,
         roles: {
-          select: {
-            role: true // 👈 lấy danh sách role của user
-          }
-        }
+          select: { role: true }
+        },
+        facilities: true
       }
     })
-
-    return user ?? null
   }
 
   async findUserByTokenVerify(

@@ -253,6 +253,16 @@ export class AuthService {
       sub: user.uuid
     })
 
+    if (user.facilities.length === 1) {
+      res.cookie('if', encryptObject(user.facilities[0]), {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        maxAge: TOKEN_EXPIRES.ACCESS, // 1 ngày
+        path: '/'
+      })
+    }
+
     res.cookie('access_token', access_token, {
       httpOnly: true,
       secure: true,
