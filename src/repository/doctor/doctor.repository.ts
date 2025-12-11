@@ -101,7 +101,8 @@ export class DoctorRepository {
         is_update_profile: true,
         departments: { select: { id: true, name: true } },
         facilities: { select: { id: true, name: true, address: true, email: true, phone: true } },
-        academicTitle: true
+        academicTitle: true,
+        description: true
       }
     })
   }

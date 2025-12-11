@@ -948,6 +948,59 @@ export class AppointmentService {
       })
     )
   }
+
+  // ================================
+  // FIND PATIENT APPOINTMENTS SERVICE
+  // ================================
+  findPatientAppointments = async (req: Request, res: Response) => {
+    const { status, page = 1, per_page = 10 } = req.query
+
+    const infoUser = decryptObject(req.cookies.iu)
+
+    const resolvedPatientId = Number(infoUser.id)
+
+    // Validate bệnh nhân tồn tại
+    const patient = await this.authRepo.findById(resolvedPatientId)
+    if (!patient) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy thông tin bệnh nhân',
+          data: null
+        })
+      )
+    }
+
+    // Pagination
+    const skip = (Number(page) - 1) * Number(per_page)
+
+    // Repository Query
+    const { data, total } = await this.appointmentRepo.findMany({
+      patientId: resolvedPatientId,
+      status: status as AppointmentStatus,
+      skip: Number(skip),
+      take: Number(per_page)
+    })
+
+    return res.status(httpStatusCode.OK).json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Tìm kiếm cuộc hẹn thành công',
+        data: {
+          current_page: Number(page),
+          data,
+          next_page_url: '',
+          prev_page_url: '',
+          path: '',
+          per_page: Number(per_page),
+          to: Math.min(Number(skip) + Number(per_page), total),
+          total
+        }
+      })
+    )
+  }
 }
 
 const appointmentService = new AppointmentService()

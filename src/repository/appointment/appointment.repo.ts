@@ -200,7 +200,7 @@ export class AppointmentRepository {
   }
 
   // Cập nhật cuộc hẹn
-  async update(id: number, data: UpdateAppointmentDto): Promise<Appointment | null> {
+  async update(id: number, data: Omit<UpdateAppointmentDto, 'id'>): Promise<Appointment | null> {
     const appointment = await prisma.appointment.findUnique({ where: { id } })
     if (!appointment) return null
 

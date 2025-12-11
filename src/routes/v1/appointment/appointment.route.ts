@@ -1,6 +1,7 @@
 import appointmentController from 'src/controllers/appointment/appointment.controller'
 import { CreateMedicalRecordDto } from 'src/dtos/appointment/create-medical-record.dto'
 import { CreateAppointmentDto } from 'src/dtos/appointment/create.dto'
+import { FindPatientAppointmentsDto } from 'src/dtos/appointment/find-patient-appointments.dto'
 import { GetCompletedAndPaidAppointmentsDto } from 'src/dtos/appointment/get-completed-and-paid-appointments.dto'
 import { GetCurrentAndNextPatientDto } from 'src/dtos/appointment/get-current-and-next-patient.dto'
 import { GetListAppointmentByDoctorQueryDto } from 'src/dtos/appointment/get-list-by-doctor.dto'
@@ -80,7 +81,7 @@ protectedRoute.post(
  *                 type: string
  *                 enum: [PENDING, CONFIRMED, COMPLETED, CANCELED]
  *                 example: CONFIRMED
- *               note:
+ *               remark:
  *                 type: string
  *                 example: Bác sĩ xác nhận lịch khám
  *     responses:
@@ -621,6 +622,42 @@ protectedRoute.post(
 protectedRoute.get(
   '/appointment-patient-detail-history/:patientId',
   wrapRequestHandler(appointmentController.getPatientDetailAndHistoryController)
+)
+
+/**
+ * @swagger
+ * /v1/user/appointment-find:
+ *   get:
+ *     summary: Tìm kiếm lịch hẹn theo patientId, status, phân trang
+ *     tags: [Appointment]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [PENDING, CONFIRMED, COMPLETED, CANCELED]
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: per_page
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: Lấy danh sách thành công
+ *       400:
+ *         description: Dữ liệu không hợp lệ
+ */
+protectedRoute.get(
+  '/appointment-find-status',
+  validateDto(FindPatientAppointmentsDto),
+  wrapRequestHandler(appointmentController.getFindPatientAppointmentsController)
 )
 
 export default appointment_routes

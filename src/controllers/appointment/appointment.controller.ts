@@ -73,6 +73,16 @@ class AppointmentController {
   getPatientDetailAndHistoryController = async (req: Request, res: Response) => {
     return this.appointmentService.getPatientDetailAndHistory(req, res)
   }
+
+  // Lấy danh sách lịch khám của bệnh nhân có filter nâng cao
+  getFindPatientAppointmentsController = async (req: Request, res: Response) => {
+    return this.appointmentService.findPatientAppointments(req, res)
+  }
+
+  // Hủy lịch của user
+  cancelAppointmentController = async (req: Request, res: Response) => {
+    return this.appointmentService.findPatientAppointments(req, res)
+  }
 }
 
 const appointmentController = new AppointmentController()
