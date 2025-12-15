@@ -349,7 +349,6 @@ export class ScheduleService {
     )
 
     const slots = data?.slots ? (typeof data.slots === 'string' ? JSON.parse(data.slots) : data.slots) : {}
-
     return res.status(httpStatusCode.OK).json(
       new ResultsReturned({
         isSuccess: true,

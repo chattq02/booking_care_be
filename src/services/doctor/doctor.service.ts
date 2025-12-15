@@ -95,7 +95,7 @@ export class DoctorService {
       )
     }
 
-    const data = await this.scheduleRepo.findScheduleDoctorId(Number(doctorId))
+    const data = await this.scheduleRepo.findScheduleDoctorId(Number(doctorId), 142)
 
     const slots = data?.slots ? (typeof data.slots === 'string' ? JSON.parse(data.slots) : data.slots) : []
 
@@ -135,7 +135,8 @@ export class DoctorService {
         uuid: user.uuid,
         name: user.fullName,
         avatar: user.avatar,
-        user_type: user.user_type
+        user_type: user.user_type,
+        academicTitle: user.academicTitle?.name
       })),
       ...facilities.map((facility) => ({
         type: 'FACILITY',

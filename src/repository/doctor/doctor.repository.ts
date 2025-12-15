@@ -113,16 +113,19 @@ export class DoctorRepository {
         fullName: {
           contains: keyword,
           mode: 'insensitive'
-        }
+        },
+        user_type: 'Doctor'
+        // user_status:"Active"
       },
       select: {
         id: true,
         uuid: true,
         fullName: true,
         avatar: true,
-        user_type: true
+        user_type: true,
+        academicTitle: true
       },
-      take: 10
+      take: 50
     })
   }
 
@@ -134,6 +137,7 @@ export class DoctorRepository {
           contains: keyword,
           mode: 'insensitive'
         }
+        // isActive: 'Active'
       },
       select: {
         id: true,
@@ -142,7 +146,7 @@ export class DoctorRepository {
         imageUrl: true,
         isActive: true
       },
-      take: 10
+      take: 50
     })
   }
 }
