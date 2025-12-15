@@ -14,6 +14,9 @@ import { EmailDto } from 'src/dtos/auth/email.dto'
 import { UserStatus } from '@prisma/client'
 import { FacilityDto } from 'src/dtos/auth/select-facility.dto'
 import { RegisterDoctorDto } from 'src/dtos/auth/register-doctor.dto'
+import { RegisterUserDto } from 'src/dtos/auth/register-user.dto'
+import { generateRandomPassword } from 'src/utils/gen-password'
+import { ChangeStatusDto } from 'src/dtos/auth/change-status.dto'
 
 config()
 export class AuthService {
@@ -166,7 +169,7 @@ export class AuthService {
     }
 
     // 2️⃣ Tạo user mới
-    await this.authRepo.createDoctor(dto)
+    const newUser = await this.authRepo.createDoctor(dto)
 
     // 4️⃣ Gửi email xác thực
     sendPassword(dto.fullName, dto.email, dto.phone)
@@ -177,7 +180,63 @@ export class AuthService {
         isSuccess: true,
         status: httpStatusCode.OK,
         message: 'Đăng ký thành công! Mật khẩu đã được gửi về email',
-        data: null
+        data: newUser
+      })
+    )
+  }
+
+  registerUser = async (dto: RegisterUserDto, res: Response) => {
+    // 🔍 1. Kiểm tra email tồn tại
+    const existing = await this.authRepo.findByEmail(dto.email)
+    if (existing) {
+      // Nếu tài khoản chưa verify
+      if (existing.is_verify === YES_NO_FLAG_VALUE['0']) {
+        return res.status(httpStatusCode.BAD_REQUEST).json(
+          new ResultsReturned({
+            isSuccess: false,
+            status: httpStatusCode.BAD_REQUEST,
+            message: 'Tài khoản đã tồn tại nhưng chưa được xác minh. Vui lòng kiểm tra email.',
+            data: null
+          })
+        )
+      }
+
+      // Nếu đã verify
+      return res.status(httpStatusCode.BAD_REQUEST).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'Email đã được sử dụng.',
+          data: null
+        })
+      )
+    }
+
+    // 2️⃣ Tạo user mới
+    const newUser = await this.authRepo.createUser(dto)
+
+    // 3️⃣ Tạo token xác minh email
+    const tokenVerifyEmail = await this.signTokenVerifyEmail({ sub: newUser.uuid })
+
+    // 4️⃣ Gửi email xác thực
+    sendVerifyRegisterEmail(dto.email, tokenVerifyEmail)
+    const verifyExpiresAt = new Date(Date.now() + TOKEN_EXPIRES.VERIFY)
+
+    // 5 Lưu token vào db
+    await this.authRepo.updateAndCreateTokenById({
+      id: newUser.id,
+      token: tokenVerifyEmail,
+      type: 'VERIFY',
+      expiresAt: verifyExpiresAt
+    })
+
+    // 6 Trả phản hồi cho client
+    return res.status(httpStatusCode.OK).json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Đăng ký thành công! Vui lòng kiểm tra email để xác minh tài khoản.',
+        data: newUser
       })
     )
   }
@@ -387,9 +446,46 @@ export class AuthService {
     )
   }
 
-  forgotPassword = async (dto: TokenDto, res: Response) => {}
+  forgotPassword = async (dto: EmailDto, res: Response) => {
+    const user = await this.authRepo.findByEmail(dto.email)
 
-  resetPassword = async (dto: EmailDto, res: Response) => {}
+    if (!user) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Email không tồn tại',
+          data: null
+        })
+      )
+    }
+
+    const password = generateRandomPassword()
+
+    sendPassword(user.fullName, dto.email, password)
+
+    await this.authRepo.updatePassword(dto.email, password)
+
+    return res.json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Mật khẩu đã được gửi đến email của bạn',
+        data: null
+      })
+    )
+  }
+
+  resetPassword = async (dto: TokenDto, res: Response) => {
+    return res.json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Mật khẩu đã thay đổi thành công',
+        data: null
+      })
+    )
+  }
 
   updateUser = async (req: Request, res: Response) => {
     const accessToken = req.cookies['access_token']
@@ -539,7 +635,9 @@ export class AuthService {
   verifyEmail = async (dto: TokenDto, res: Response) => {
     const decoded_token_verify_email = await this.decodeVerifyEmailToken(dto.token)
 
-    const is_verify = await this.authRepo.findByEmailIsVerify(decoded_token_verify_email.sub)
+    const user = await this.authRepo.findByEmailIsVerify(decoded_token_verify_email.sub)
+
+    const is_verify = user?.is_verify
 
     //1. Kiểm tra mail đã được đăng ký chưa
     if (!is_verify) {
@@ -558,7 +656,7 @@ export class AuthService {
         new ResultsReturned({
           isSuccess: false,
           status: httpStatusCode.BAD_REQUEST,
-          message: 'Tài khoản đã được verify, vui lòng kiểm tra email để xác nhận',
+          message: 'Tài khoản đã được verify',
           data: null
         })
       )
@@ -573,7 +671,9 @@ export class AuthService {
         isSuccess: true,
         status: httpStatusCode.OK,
         message: 'Đã xác thực thành công',
-        data: null
+        data: {
+          user_type: user.user_type
+        }
       })
     )
   }
@@ -632,6 +732,30 @@ export class AuthService {
         isSuccess: true,
         status: httpStatusCode.OK,
         message: 'Chọn cơ sở làm việc thành công',
+        data: null
+      })
+    )
+  }
+
+  changeStatusDoctor = async (dto: ChangeStatusDto, res: Response) => {
+    const user = await this.authRepo.findByEmail(dto.email)
+
+    if (!user) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Email không tồn tại',
+          data: null
+        })
+      )
+    }
+    await this.authRepo.changeStatus(dto.email, dto.user_status as any)
+    return res.json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Thay đổi trạng thái thành công',
         data: null
       })
     )

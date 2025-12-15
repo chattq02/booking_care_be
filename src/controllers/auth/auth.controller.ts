@@ -12,6 +12,10 @@ class AuthController {
     return this.authService.registerDoctor(req.body, res)
   }
 
+  registerUserController = async (req: Request, res: Response) => {
+    return this.authService.registerUser(req.body, res)
+  }
+
   loginController = async (req: Request, res: Response) => {
     return this.authService.login(req.body, res)
   }
@@ -30,6 +34,10 @@ class AuthController {
 
   resetPasswordController = async (req: Request, res: Response) => {
     return this.authService.resetPassword(req.body, res)
+  }
+
+  changeStatusDoctorController = async (req: Request, res: Response) => {
+    return this.authService.changeStatusDoctor(req.body, res)
   }
 
   meController = async (req: Request, res: Response) => {

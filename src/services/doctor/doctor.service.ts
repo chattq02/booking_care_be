@@ -108,6 +108,54 @@ export class DoctorService {
       })
     )
   }
+
+  searchUsersAndFacilities = async (req: Request, res: Response) => {
+    const { keyword = '' } = req.query as { keyword: string }
+
+    if (!keyword.trim()) {
+      return res.status(httpStatusCode.BAD_REQUEST).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'Keyword không được để trống',
+          data: null
+        })
+      )
+    }
+
+    const [users, facilities] = await Promise.all([
+      this.doctorRepo.searchUsers(keyword),
+      this.doctorRepo.searchFacilities(keyword)
+    ])
+
+    const data = [
+      ...users.map((user) => ({
+        type: 'USER',
+        id: user.id,
+        uuid: user.uuid,
+        name: user.fullName,
+        avatar: user.avatar,
+        user_type: user.user_type
+      })),
+      ...facilities.map((facility) => ({
+        type: 'FACILITY',
+        id: facility.id,
+        uuid: facility.uuid,
+        name: facility.name,
+        imageUrl: facility.imageUrl,
+        status: facility.isActive
+      }))
+    ]
+
+    return res.status(httpStatusCode.OK).json(
+      new ResultsReturned({
+        isSuccess: true,
+        status: httpStatusCode.OK,
+        message: 'Lấy thông tin thành công',
+        data
+      })
+    )
+  }
 }
 
 const doctorService = new DoctorService()

@@ -8,6 +8,9 @@ import { createRoleRouter } from 'src/utils/role-route'
 import { FacilityDto } from 'src/dtos/auth/select-facility.dto'
 import { UpdateUserDto } from 'src/dtos/auth/update-user.dto'
 import { RegisterDoctorDto } from 'src/dtos/auth/register-doctor.dto'
+import { RegisterUserDto } from 'src/dtos/auth/register-user.dto'
+import { EmailDto } from 'src/dtos/auth/email.dto'
+import { ChangeStatusDto } from 'src/dtos/auth/change-status.dto'
 
 const { router: auth_routes, protectedRoute, publicRoute, protectedWithRoles } = createRoleRouter()
 
@@ -188,9 +191,35 @@ protectedRoute.post('/me', wrapRequestHandler(authController.meController))
  *       200:
  *         description: refresh-token successfully
  */
-protectedRoute.post(
-  '/forgot-password',
-  validateDto(TokenDto),
+publicRoute.post('/forgot-password', validateDto(EmailDto), wrapRequestHandler(authController.forgotPasswordController))
+
+/**
+ * @openapi
+ * /v1/auth/forgot-password-doctor:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: forgot-password
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/x-www-form-urlencoded:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: doctor@example.com
+ *     responses:
+ *       200:
+ *         description: refresh-token successfully
+ */
+protectedWithRoles.post(
+  '/forgot-password-doctor',
+  ['ADMIN'],
+  validateDto(EmailDto),
   wrapRequestHandler(authController.forgotPasswordController)
 )
 
@@ -221,6 +250,35 @@ protectedRoute.post(
   '/reset-password',
   validateDto(TokenDto),
   wrapRequestHandler(authController.resetPasswordController)
+)
+
+/**
+ * @openapi
+ * /v1/auth/change-status-doctor:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: change-status-doctor
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/x-www-form-urlencoded:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               user_status:
+ *                 type: string
+ *                 example: "Banned"
+ *     responses:
+ *       200:
+ *         description: refresh-token successfully
+ */
+protectedRoute.post(
+  '/change-status-doctor',
+  validateDto(ChangeStatusDto),
+  wrapRequestHandler(authController.changeStatusDoctorController)
 )
 
 /**
@@ -498,6 +556,74 @@ protectedRoute.post(
   '/register-doctor',
   validateDto(RegisterDoctorDto),
   wrapRequestHandler(authController.registerDoctorController)
+)
+
+/**
+ * @openapi
+ * /v1/auth/register-user:
+ *   post:
+ *     tags:
+ *       - Auth
+ *     summary: Đăng ký tài khoản người dùng
+ *     description: API dành cho người dùng tạo mới tài khoản.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               fullName:
+ *                 type: string
+ *                 example: "Nguyễn Văn Bác Sĩ"
+ *               email:
+ *                 type: string
+ *                 example: doctor@example.com
+ *               password:
+ *                 type: string
+ *                 example: Password@123
+ *     responses:
+ *       200:
+ *         description: Đăng ký bác sĩ thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Doctor registered successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: number
+ *                       example: 10
+ *                     uuid:
+ *                       type: string
+ *                       example: "230f5c0e-f2cc-4b34-981d-123456789000"
+ *                     fullName:
+ *                       type: string
+ *                       example: "Nguyễn Văn A"
+ *                     email:
+ *                       type: string
+ *                       example: "user@example.com"
+ *       400:
+ *         description: Dữ liệu không hợp lệ
+ *       401:
+ *         description: Không có quyền truy cập
+ *       500:
+ *         description: Lỗi server
+ */
+publicRoute.post(
+  '/register-user',
+  validateDto(RegisterUserDto),
+  wrapRequestHandler(authController.registerUserController)
 )
 
 export default auth_routes

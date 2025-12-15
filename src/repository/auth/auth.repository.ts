@@ -3,6 +3,7 @@ import { prisma } from 'src/config/database.config'
 import { YES_NO_FLAG_VALUE, YesNoFlagKey } from 'src/constants/enums'
 import { UserStatus } from 'src/constants/user_roles'
 import { RegisterDoctorDto } from 'src/dtos/auth/register-doctor.dto'
+import { RegisterUserDto } from 'src/dtos/auth/register-user.dto'
 import { RegisterDto } from 'src/dtos/auth/register.dto'
 import { UpdateUserDto } from 'src/dtos/auth/update-user.dto'
 import { hasPassword } from 'src/utils/crypto'
@@ -196,12 +197,11 @@ export class AuthRepository {
     return user ?? null
   }
 
-  async findByEmailIsVerify(user_uuid: string): Promise<YesNoFlagKey | null> {
+  async findByEmailIsVerify(user_uuid: string): Promise<User | null> {
     const user = await prisma.user.findFirst({
-      where: { uuid: user_uuid },
-      select: { is_verify: true }
+      where: { uuid: user_uuid }
     })
-    return user?.is_verify ?? null
+    return user ?? null
   }
 
   async verifyEmail(user_uuid: string): Promise<Boolean> {
@@ -276,9 +276,10 @@ export class AuthRepository {
         avatar: data.avatar,
         address: data.address,
         academicTitleId: data.academicTitleId,
-        is_verify: 'YES',
+        is_verify: 'NO',
         is_supper_admin: 'NO',
         user_status: 'Active',
+        user_type: 'Doctor',
         departments: {
           connect: {
             id: data.departmentId
@@ -291,7 +292,54 @@ export class AuthRepository {
               facilityId: data.facilityId
             }
           ]
+        },
+        facilities: {
+          connect: {
+            id: data.facilityId
+          }
         }
+      }
+    })
+  }
+
+  /**
+   * Tạo bác sĩ mới
+   */
+  async createUser(data: RegisterUserDto): Promise<User> {
+    return prisma.user.create({
+      data: {
+        fullName: data.fullName ?? '',
+        email: data.email,
+        password: hasPassword(data.password),
+        is_verify: 'NO',
+        is_supper_admin: 'NO',
+        user_status: 'Active',
+        user_type: 'Patient',
+        roles: {
+          create: [
+            {
+              role: Role.USER
+            }
+          ]
+        }
+      }
+    })
+  }
+
+  async updatePassword(email: string, password: string) {
+    return prisma.user.update({
+      where: { email },
+      data: {
+        password: hasPassword(password)
+      }
+    })
+  }
+
+  async changeStatus(email: string, status: UserStatus) {
+    return prisma.user.update({
+      where: { email },
+      data: {
+        user_status: status
       }
     })
   }

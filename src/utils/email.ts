@@ -6,7 +6,7 @@ import { config } from 'dotenv'
 config()
 
 export const sendVerifyRegisterEmail = async (toAddress: string, tokenVerifyEmail: string) => {
-  const verify_url = `${process.env.FE_BASE_URL_DOCTOR}/verify-email?token=${tokenVerifyEmail}`
+  const verify_url = `${process.env.FE_BASE_URL}/verify-email?token=${tokenVerifyEmail}`
   let verifyEmailTemplate = fs.readFileSync(path.resolve('src/template/verify-email.html'), 'utf8')
   verifyEmailTemplate = verifyEmailTemplate.replace('{{VERIFY_URL}}', `${verify_url}`)
   const transporter = nodemailer.createTransport({

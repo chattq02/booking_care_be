@@ -21,6 +21,11 @@ class DoctorController {
   getScheduleDoctorByDate = async (req: Request, res: Response) => {
     return this.doctorService.getScheduleDoctorByDate(req, res)
   }
+
+  // ✅ SEARCH USER + FACILITY
+  searchUsersAndFacilitiesController = async (req: Request, res: Response) => {
+    return this.doctorService.searchUsersAndFacilities(req, res)
+  }
 }
 
 const doctorController = new DoctorController()

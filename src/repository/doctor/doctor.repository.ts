@@ -106,4 +106,43 @@ export class DoctorRepository {
       }
     })
   }
+
+  async searchUsers(keyword: string) {
+    return prisma.user.findMany({
+      where: {
+        fullName: {
+          contains: keyword,
+          mode: 'insensitive'
+        }
+      },
+      select: {
+        id: true,
+        uuid: true,
+        fullName: true,
+        avatar: true,
+        user_type: true
+      },
+      take: 10
+    })
+  }
+
+  // SEARCH FACILITY
+  async searchFacilities(keyword: string) {
+    return prisma.medicalFacility.findMany({
+      where: {
+        name: {
+          contains: keyword,
+          mode: 'insensitive'
+        }
+      },
+      select: {
+        id: true,
+        uuid: true,
+        name: true,
+        imageUrl: true,
+        isActive: true
+      },
+      take: 10
+    })
+  }
 }

@@ -1,4 +1,4 @@
-import { IsInt } from 'class-validator'
+import { IsInt, IsOptional } from 'class-validator'
 import { PaginationQueryDto } from '../pagination_query.dto'
 import { Type } from 'class-transformer'
 

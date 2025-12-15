@@ -104,4 +104,58 @@ protectedWithRoles.get(
   wrapRequestHandler(doctorController.getListDoctorController)
 )
 
+/**
+ * @openapi
+ * /v1/doctor/search-users-facilities:
+ *   get:
+ *     tags:
+ *       - Doctor
+ *     summary: Tìm kiếm user và cơ sở y tế theo keyword
+ *     parameters:
+ *       - in: query
+ *         name: keyword
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "vinh"
+ *         description: Từ khóa tìm kiếm (tên user hoặc tên cơ sở)
+ *     responses:
+ *       200:
+ *         description: Thành công — trả về danh sách user & facility
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 isSuccess:
+ *                   type: boolean
+ *                 status:
+ *                   type: integer
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     oneOf:
+ *                       - type: object
+ *                         properties:
+ *                           type:
+ *                             type: string
+ *                             example: USER
+ *                           id:
+ *                             type: number
+ *                           name:
+ *                             type: string
+ *                       - type: object
+ *                         properties:
+ *                           type:
+ *                             type: string
+ *                             example: FACILITY
+ *                           id:
+ *                             type: number
+ *                           name:
+ *                             type: string
+ */
+publicRoute.get('/search-users-facilities', wrapRequestHandler(doctorController.searchUsersAndFacilitiesController))
+
 export default mst_doctor_routes
