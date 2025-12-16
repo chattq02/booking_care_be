@@ -103,6 +103,17 @@ export class ScheduleRepository {
     })
   }
 
+  async updateSlot(id: number | null, slots: any, doctorId?: number): Promise<Schedule> {
+    const safeId = id && id > 0 ? id : -1
+
+    return prisma.schedule.update({
+      where: { id: safeId, ...(doctorId !== undefined && { doctorId }) },
+      data: {
+        slots: JSON.stringify(slots)
+      }
+    })
+  }
+
   async deleteMany(id: number) {
     await prisma.schedule.deleteMany({
       where: { doctorId: id }

@@ -476,7 +476,61 @@ export class AuthService {
     )
   }
 
-  resetPassword = async (dto: TokenDto, res: Response) => {
+  changePassword = async (req: Request, res: Response) => {
+    const accessToken = req.cookies.access_token
+
+    const { new_password, old_password } = req.body
+
+    if (new_password === old_password) {
+      return res.status(httpStatusCode.BAD_REQUEST).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'Mật khẩu mới không được trùng với mật khẩu cũ',
+          data: null
+        })
+      )
+    }
+
+    if (!accessToken) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Access_Token không tồn tại',
+          data: null
+        })
+      )
+    }
+
+    const decoded_access = await this.decodeAccessToken(accessToken)
+
+    const user = await this.authRepo.findUserByUuid(decoded_access.sub)
+
+    if (!user) {
+      res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy người dùng',
+          data: null
+        })
+      )
+    }
+
+    if (hasPassword(old_password) !== user?.password) {
+      return res.status(httpStatusCode.BAD_REQUEST).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'Mật khẩu không đúng',
+          data: null
+        })
+      )
+    }
+
+    await this.authRepo.updatePassword(user.email, new_password)
+
     return res.json(
       new ResultsReturned({
         isSuccess: true,

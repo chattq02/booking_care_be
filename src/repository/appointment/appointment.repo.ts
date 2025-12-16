@@ -18,7 +18,8 @@ export class AppointmentRepository {
         paymentStatus: data.paymentStatus ?? PaymentStatus.UNPAID,
         paymentAmount: data.paymentAmount,
         appointmentDate: data.appointmentDate,
-        slot: JSON.stringify(data.slot)
+        slot: JSON.stringify(data.slot),
+        departmentId: data.departmentId
       }
     })
   }
@@ -183,7 +184,11 @@ export class AppointmentRepository {
               updatedAt: true,
               items: true
             }
-          }
+          },
+          department: {
+            select: { id: true, name: true }
+          },
+          departmentId: true
         }
       }),
       prisma.appointment.count({ where })

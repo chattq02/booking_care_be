@@ -151,6 +151,9 @@ export class DepartmentRepository {
           address: true,
           academicTitle: true,
           schedules: {
+            where: {
+              departmentId: departmentId
+            },
             select: {
               slots: true,
               id: true,

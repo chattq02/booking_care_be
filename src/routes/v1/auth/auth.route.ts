@@ -11,6 +11,7 @@ import { RegisterDoctorDto } from 'src/dtos/auth/register-doctor.dto'
 import { RegisterUserDto } from 'src/dtos/auth/register-user.dto'
 import { EmailDto } from 'src/dtos/auth/email.dto'
 import { ChangeStatusDto } from 'src/dtos/auth/change-status.dto'
+import { ChangePasswordDto } from 'src/dtos/auth/change-password.dto'
 
 const { router: auth_routes, protectedRoute, publicRoute, protectedWithRoles } = createRoleRouter()
 
@@ -225,11 +226,11 @@ protectedWithRoles.post(
 
 /**
  * @openapi
- * /v1/auth/reset-password:
+ * /v1/auth/change-password:
  *   post:
  *     tags:
  *       - Auth
- *     summary: reset-password
+ *     summary: change-password
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -239,17 +240,20 @@ protectedWithRoles.post(
  *           schema:
  *             type: object
  *             properties:
- *               email:
+ *               old_password:
  *                 type: string
- *                 example: user@example.com
+ *                 example: user@example
+ *               new_password:
+ *                 type: string
+ *                 example: user1@example
  *     responses:
  *       200:
  *         description: refresh-token successfully
  */
 protectedRoute.post(
-  '/reset-password',
-  validateDto(TokenDto),
-  wrapRequestHandler(authController.resetPasswordController)
+  '/change-password',
+  validateDto(ChangePasswordDto),
+  wrapRequestHandler(authController.changePasswordController)
 )
 
 /**

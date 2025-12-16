@@ -81,7 +81,7 @@ export class DoctorService {
   }
 
   getScheduleDoctorByDate = async (req: Request, res: Response) => {
-    const { doctorId, date } = req.query as { doctorId: string; date: string }
+    const { doctorId, date, departmentId } = req.query as { doctorId: string; date: string; departmentId: string }
 
     const doctor = await this.doctorRepo.getDoctorById(Number(doctorId))
     if (!doctor) {
@@ -95,7 +95,7 @@ export class DoctorService {
       )
     }
 
-    const data = await this.scheduleRepo.findScheduleDoctorId(Number(doctorId), 142)
+    const data = await this.scheduleRepo.findScheduleDoctorId(Number(doctorId), Number(departmentId))
 
     const slots = data?.slots ? (typeof data.slots === 'string' ? JSON.parse(data.slots) : data.slots) : []
 

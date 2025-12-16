@@ -32,8 +32,8 @@ class AuthController {
     return this.authService.forgotPassword(req.body, res)
   }
 
-  resetPasswordController = async (req: Request, res: Response) => {
-    return this.authService.resetPassword(req.body, res)
+  changePasswordController = async (req: Request, res: Response) => {
+    return this.authService.changePassword(req, res)
   }
 
   changeStatusDoctorController = async (req: Request, res: Response) => {

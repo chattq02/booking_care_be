@@ -213,6 +213,20 @@ export class ScheduleService {
 
     const slotsOld = data?.slots ? (typeof data.slots === 'string' ? JSON.parse(data.slots) : data.slots) : {}
 
+    // Kiểm tra trong toàn bộ mảng data
+    const hasDateInData = slotsOld.some((item: any) => item.selectedDates && item.selectedDates.includes(dto.date))
+
+    if (hasDateInData) {
+      return res.status(httpStatusCode.BAD_REQUEST).json(
+        new ResultsReturned({
+          isSuccess: true,
+          status: httpStatusCode.BAD_REQUEST,
+          message: 'Lịch đã được phát hành',
+          data: null
+        })
+      )
+    }
+
     await this.scheduleRepo.upsert(dto, slotsOld)
 
     return res.status(httpStatusCode.CREATED).json(

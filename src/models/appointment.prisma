@@ -24,6 +24,7 @@ model Appointment {
   patientId       Int // FK: Id của bệnh nhân (User có role=PATIENT)
   scheduleId      Int // FK: Id của ca khám (Schedule)
   facilityId      Int // FK: Id của cơ sở y tế (MedicalFacility)
+  departmentId    Int?
   paymentStatus   PaymentStatus     @default(UNPAID)
   attachments     Json?
   paymentAmount   Float?
@@ -32,22 +33,23 @@ model Appointment {
   appointmentDate String // THÊM MỚI: Ngày đặt lịch khám (ngày thực tế của cuộc hẹn)
   slot            Json              @default("{}") // THÊM MỚI: Thời gian đặt lịch khám (thời gian thực tế của cuộc hẹn)
   remark          String? // Ghi chú thêm từ bệnh nhân / bác sĩ
-  bloodPressure   String?     // Huyết áp (vd: "120/80")
-  heartRate       Int?        // Nhịp tim (lần/phút)
-  weight          Float?      // Cân nặng (kg)
-  height          Float?      // Chiều cao (cm)
-  temperature     Float?      // Nhiệt độ (°C)
+  bloodPressure   String? // Huyết áp (vd: "120/80")
+  heartRate       Int? // Nhịp tim (lần/phút)
+  weight          Float? // Cân nặng (kg)
+  height          Float? // Chiều cao (cm)
+  temperature     Float? // Nhiệt độ (°C)
 
-  diagnosis       String?     // Chuẩn đoán
-  medicalHistory  String?     // Tiền sử bệnh
-  conclusion      String?     // Kết luận
-  instruction     String?     // Hướng dẫn điều trị
+  diagnosis      String? // Chuẩn đoán
+  medicalHistory String? // Tiền sử bệnh
+  conclusion     String? // Kết luận
+  instruction    String? // Hướng dẫn điều trị
   // Quan hệ
-  doctor          User              @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: Cascade)
-  patient         User              @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
-  schedule        Schedule          @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
-  facility        MedicalFacility   @relation(fields: [facilityId], references: [id], onDelete: Cascade)
-  prescription    Prescription?     @relation("AppointmentToPrescription") // Mối quan hệ 1-1 với đơn thuốc
+  doctor         User            @relation("DoctorAppointments", fields: [doctorId], references: [id], onDelete: Cascade)
+  patient        User            @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
+  schedule       Schedule        @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  facility       MedicalFacility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  prescription   Prescription?   @relation("AppointmentToPrescription") // Mối quan hệ 1-1 với đơn thuốc
+  department     Department?     @relation(fields: [departmentId], references: [id], onDelete: SetNull) // THÊM MỚI
 
   createdAt DateTime @default(now()) // Thời gian tạo bản ghi
   updatedAt DateTime @updatedAt // Cập nhật khi thay đổi
@@ -56,5 +58,6 @@ model Appointment {
   @@index([facilityId, createdAt]) // Index cho thống kê theo thời gian
   @@index([appointmentDate]) // THÊM MỚI: Index cho truy vấn theo ngày khám
   @@index([patientId, appointmentDate]) // THÊM MỚI: Index cho lịch sử khám của bệnh nhân
+  @@index([departmentId])
   @@map("appointments") // Tên bảng trong DB
 }

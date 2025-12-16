@@ -125,6 +125,13 @@ publicRoute.get('/get-doctor/:id', wrapRequestHandler(doctorController.getDoctor
  *           minimum: 1
  *           description: ID của bác sĩ
  *       - in: query
+ *         name: departmentId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           description: ID phòng ban của bác sĩ
+ *       - in: query
  *         name: date
  *         required: true
  *         schema:

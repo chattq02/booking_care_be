@@ -11,6 +11,10 @@ export class CreateAppointmentDto {
   @IsInt({ message: 'Mã bác sĩ phải là số nguyên' })
   doctorId!: number
 
+  @Type(() => Number)
+  @IsInt({ message: 'Mã phòng ban phải là số nguyên' })
+  departmentId!: number
+
   @IsOptional()
   @IsString({ message: 'Ghi chú phải là chuỗi' })
   note?: string
@@ -27,4 +31,5 @@ export interface ICreateAppointmentReq {
   paymentAmount: number
   appointmentDate: string
   slot: SlotTime
+  departmentId: number
 }

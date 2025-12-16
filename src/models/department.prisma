@@ -10,9 +10,10 @@ model Department {
   parent         Department?  @relation("SubDepartments", fields: [parentId], references: [id], onDelete: Cascade)
   subDepartments Department[] @relation("SubDepartments") // Danh sách các chuyên khoa con
 
-  doctors   User[]           @relation("DoctorDepartments") // Các bác sĩ thuộc chuyên khoa này (many-to-many)
-  facility  MedicalFacility? @relation(fields: [facilityId], references: [id], onDelete: Cascade)
-  schedules Schedule[]       @relation("DepartmentSchedules")
+  doctors      User[]           @relation("DoctorDepartments") // Các bác sĩ thuộc chuyên khoa này (many-to-many)
+  facility     MedicalFacility? @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  schedules    Schedule[]       @relation("DepartmentSchedules")
+  appointments Appointment[]
 
   createdAt DateTime @default(now()) // Ngày tạo
   updatedAt DateTime @updatedAt // Ngày cập nhật

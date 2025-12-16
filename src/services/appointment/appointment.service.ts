@@ -13,6 +13,8 @@ import { sendAppointmentConfirmationEmail, sendAppointmentConfirmationStatusEmai
 import { AuthRepository } from 'src/repository/auth/auth.repository'
 import { ReportAppointmentDto } from 'src/dtos/appointment/report.dto'
 import { CreateMedicalRecordDto } from 'src/dtos/appointment/create-medical-record.dto'
+import { DepartmentRepository } from 'src/repository/admin/specialty.repo'
+import { updateSlotIsBlockOptimized } from '../schedule/helper'
 
 config()
 
@@ -21,6 +23,7 @@ export class AppointmentService {
   private doctorRepo = new DoctorRepository()
   private scheduleRepo = new ScheduleRepository()
   private authRepo = new AuthRepository()
+  private departmentRepo = new DepartmentRepository()
 
   // Tạo cuộc hẹn mới
   createAppointment = async (body: CreateAppointmentDto, res: Response, req: Request) => {
@@ -31,6 +34,19 @@ export class AppointmentService {
           isSuccess: false,
           status: httpStatusCode.NOT_FOUND,
           message: 'Không tìm thấy thông tin bác sĩ',
+          data: null
+        })
+      )
+    }
+
+    const department = await this.departmentRepo.findById(Number(body.departmentId))
+
+    if (!department) {
+      return res.status(httpStatusCode.NOT_FOUND).json(
+        new ResultsReturned({
+          isSuccess: false,
+          status: httpStatusCode.NOT_FOUND,
+          message: 'Không tìm thấy phòng khám" của bác sĩ',
           data: null
         })
       )
@@ -53,7 +69,7 @@ export class AppointmentService {
           isSuccess: false,
           status: httpStatusCode.NOT_FOUND,
           message: 'Không tìm thấy thông tin lịch hẹn',
-          data: null
+          data: slots
         })
       )
     }
@@ -61,6 +77,7 @@ export class AppointmentService {
     const dataCreate = {
       doctorId: Number(body.doctorId),
       patientId: Number(infoUser?.id),
+      departmentId: Number(body?.departmentId),
       scheduleId: Number(scheduleDoctor?.id),
       facilityId: Number(scheduleDoctor?.facilityId), // THÊM facilityId
       status: AppointmentStatus.PENDING,
@@ -211,7 +228,8 @@ export class AppointmentService {
 
   // Cập nhật cuộc hẹn
   updateAppointment = async (id: number, body: any, res: Response) => {
-    const appointment = await this.appointmentRepo.update(id, body)
+    const appointment = await this.appointmentRepo.findById(id)
+
     if (!appointment) {
       return res.status(httpStatusCode.NOT_FOUND).json(
         new ResultsReturned({
@@ -222,13 +240,28 @@ export class AppointmentService {
         })
       )
     }
+    const data = await this.scheduleRepo.findScheduleDoctorId(
+      Number(appointment.doctorId),
+      Number(appointment.departmentId),
+      Number(appointment.facilityId)
+    )
+    const slotAppointment = appointment?.slot
+      ? typeof appointment?.slot === 'string'
+        ? JSON.parse(appointment?.slot)
+        : appointment?.slot
+      : {}
+    const slots = data?.slots ? (typeof data.slots === 'string' ? JSON.parse(data.slots) : data.slots) : {}
+
+    const updatedData = updateSlotIsBlockOptimized(slots, slotAppointment.id)
+    await this.scheduleRepo.updateSlot(appointment.scheduleId, updatedData)
+    await this.appointmentRepo.update(id, body)
 
     return res.status(httpStatusCode.OK).json(
       new ResultsReturned({
         isSuccess: true,
         status: httpStatusCode.OK,
         message: 'Cập nhật cuộc hẹn thành công',
-        data: appointment
+        data: null
       })
     )
   }

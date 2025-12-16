@@ -118,6 +118,7 @@ export class AuthRepository {
         | 'user_status'
         | 'createdAt'
         | 'updatedAt'
+        | 'password'
       > & {
         roles: { role: Role }[]
       })
@@ -161,7 +162,8 @@ export class AuthRepository {
           select: {
             name: true
           }
-        }
+        },
+        password: true
       }
     })
 

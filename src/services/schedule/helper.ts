@@ -119,3 +119,17 @@ export const mergeAllSlotsWithOverride = (oldSlots: SlotConfig[], newSlots: Slot
 
   return [mergedConfig]
 }
+
+export function updateSlotIsBlockOptimized(slots_data: SlotConfig[], slot_id_update: string) {
+  for (const config of slots_data) {
+    for (const day of config.daySchedules) {
+      for (const slot of day.slots) {
+        if (slot.id === slot_id_update) {
+          slot.isBlock = false
+          return slots_data // Dừng ngay khi tìm thấy và cập nhật
+        }
+      }
+    }
+  }
+  return slots_data
+}
