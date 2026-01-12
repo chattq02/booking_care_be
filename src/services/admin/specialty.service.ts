@@ -288,7 +288,6 @@ export class DepartmentService {
         data: null
       })
     }
-    console.log('departmentId', departmentId)
     // 3️⃣ Lấy dữ liệu user với phân trang
     const { data, total } = await this.departmentRepo.findUsersInDepartmentPaged(
       Number(departmentId),
@@ -297,7 +296,6 @@ export class DepartmentService {
       skip,
       Number(per_page)
     )
-    console.log('data', data)
 
     // Lấy ngày hôm nay (không bao gồm thời gian)
     const todayStr = new Date().toISOString().split('T')[0]

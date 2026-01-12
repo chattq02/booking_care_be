@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 
+require('dotenv').config()
 // Build cấu hình không qua URL
 export const prisma = new PrismaClient({
   datasources: {

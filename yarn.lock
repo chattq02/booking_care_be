@@ -2109,6 +2109,7 @@ __metadata:
     multer: "npm:^2.0.2"
     nodemailer: "npm:^6.9.15"
     nodemon: "npm:^3.0.3"
+    openai: "npm:^6.16.0"
     pg: "npm:^8.16.3"
     pre-commit: "npm:^1.2.2"
     prettier: "npm:^3.2.4"
@@ -4340,6 +4341,23 @@ __metadata:
   dependencies:
     fn.name: "npm:1.x.x"
   checksum: 10c0/6e4887b331edbb954f4e915831cbec0a7b9956c36f4feb5f6de98c448ac02ff881fd8d9b55a6b1b55030af184c6b648f340a76eb211812f4ad8c9b4b8692fdaa
+  languageName: node
+  linkType: hard
+
+"openai@npm:^6.16.0":
+  version: 6.16.0
+  resolution: "openai@npm:6.16.0"
+  peerDependencies:
+    ws: ^8.18.0
+    zod: ^3.25 || ^4.0
+  peerDependenciesMeta:
+    ws:
+      optional: true
+    zod:
+      optional: true
+  bin:
+    openai: bin/cli
+  checksum: 10c0/67d2cd58224f0777ea1369eae3f35a2a48c9efa9e70d05b854b9d2e96bc56f15e7baf88a732070e35d701906842baed9bf3363fb379e613037b86085d406bcd0
   languageName: node
   linkType: hard
 
